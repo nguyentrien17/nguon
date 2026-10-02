@@ -1,0 +1,12 @@
+{
+    "name": "shared-root",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Root package chỉ để cung cấp node_modules cho shared/ (validators dùng zod, được cả client và server require/import) — không chứa code chạy trực tiếp.",
+    "scripts": {
+        "audit": "npm audit --omit=dev"
+    },
+    "dependencies": {
+        "zod": "4.6.1"
+    }
+}

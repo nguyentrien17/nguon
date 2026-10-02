@@ -1,0 +1,250 @@
+{
+  "app": {
+    "title": "Cổng Quản Trị RBAC"
+  },
+  "common": {
+    "close": "Đóng"
+  },
+  "login": {
+    "heroTitle": "Chào mừng trở lại!",
+    "heroSubtitle": "Đăng nhập để quản lý người dùng, vai trò và phân quyền.",
+    "formTitle": "Đăng nhập",
+    "title": "Đăng nhập vào tài khoản",
+    "username": "Tên đăng nhập",
+    "email": "Địa chỉ email",
+    "password": "Mật khẩu",
+    "submit": "Đăng nhập",
+    "loading": "Đang đăng nhập...",
+    "forgotPassword": "Quên mật khẩu?"
+  },
+  "forgotPassword": {
+    "heroTitle": "Quên mật khẩu?",
+    "heroSubtitle": "Đừng lo, nhập email và chúng tôi sẽ gửi link đặt lại mật khẩu.",
+    "formTitle": "Đặt lại mật khẩu",
+    "formSubtitle": "Chúng tôi sẽ gửi email chứa link đặt lại mật khẩu cho bạn.",
+    "submit": "Gửi link đặt lại",
+    "loading": "Đang gửi...",
+    "sentTitle": "Kiểm tra email của bạn",
+    "sentSubtitle": "Nếu tồn tại tài khoản với email {{email}}, chúng tôi đã gửi link đặt lại mật khẩu đến đó.",
+    "backToLogin": "Quay lại đăng nhập"
+  },
+  "resetPassword": {
+    "heroTitle": "Đặt mật khẩu mới",
+    "heroSubtitle": "Chọn một mật khẩu mạnh mà bạn chưa từng sử dụng.",
+    "formTitle": "Mật khẩu mới",
+    "formSubtitle": "Nhập và xác nhận mật khẩu mới của bạn.",
+    "newPassword": "Mật khẩu mới",
+    "confirmPassword": "Xác nhận mật khẩu mới",
+    "submit": "Đặt lại mật khẩu",
+    "loading": "Đang xử lý...",
+    "doneTitle": "Đã cập nhật mật khẩu",
+    "doneSubtitle": "Mật khẩu của bạn đã được đặt lại thành công. Giờ bạn có thể đăng nhập.",
+    "errors": {
+      "tooShort": "Mật khẩu phải có ít nhất 8 ký tự",
+      "mismatch": "Mật khẩu xác nhận không khớp",
+      "missingToken": "Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu link mới."
+    }
+  },
+  "nav": {
+    "dashboard": "Tổng quan",
+    "users": "Quản lý người dùng",
+    "permissions": "Vai trò & Quyền hạn",
+    "auditLogs": "Nhật ký hệ thống",
+    "moduleActions": "Module & Action",
+    "logout": "Đăng xuất"
+  },
+  "dashboard": {
+    "welcome": "Chào mừng trở lại, {{name}}"
+  },
+  "users": {
+    "title": "Quản lý người dùng",
+    "search": "Tìm theo tên đăng nhập, email hoặc họ tên",
+    "create": "Thêm người dùng",
+    "edit": "Sửa",
+    "lock": "Khóa",
+    "unlock": "Mở khóa",
+    "manageRoles": "Quản lý vai trò",
+    "export": "Xuất Excel",
+    "columns": {
+      "username": "Tên đăng nhập",
+      "email": "Email",
+      "fullName": "Họ và tên",
+      "status": "Trạng thái",
+      "createdAt": "Ngày tạo",
+      "actions": "Thao tác"
+    },
+    "status": {
+      "active": "Hoạt động",
+      "locked": "Đã khóa"
+    },
+    "form": {
+      "usernameLabel": "Tên đăng nhập",
+      "emailLabel": "Email",
+      "passwordLabel": "Mật khẩu",
+      "fullNameLabel": "Họ và tên",
+      "rolesLabel": "Gán vai trò",
+      "save": "Lưu",
+      "cancel": "Hủy"
+    }
+  },
+  "permissions": {
+    "title": "Vai trò & Quyền hạn",
+    "create": "Thêm mới",
+    "createChild": "Thêm vai trò con",
+    "updateTitle": "Cập nhật quyền",
+    "roleName": "Tên vai trò",
+    "roleCode": "Mã vai trò",
+    "roleDescription": "Mô tả",
+    "parentRole": "Vai trò cha",
+    "viewGrants": "Xem quyền đã cấp",
+    "noGrants": "Vai trò này chưa được cấp quyền nào.",
+    "search": "Mã quyền, tên quyền...",
+    "matrix": "Ma trận quyền",
+    "tabInfo": "Thông tin cơ bản",
+    "tabPermissions": "Chọn quyền",
+    "applyPreset": "Áp dụng",
+    "presets": {
+      "view_only": "Chỉ xem",
+      "editor": "Biên tập (xem/thêm/sửa)",
+      "full": "Toàn quyền"
+    },
+    "roleColumns": {
+      "code": "Mã quyền",
+      "name": "Tên quyền",
+      "description": "Mô tả",
+      "userCount": "Số tài khoản",
+      "createdAt": "Ngày tạo",
+      "actions": "Thao tác"
+    },
+    "columns": {
+      "code": "Mã quyền/Action",
+      "name": "Tên quyền/Action",
+      "path": "Đường dẫn/ElementId",
+      "grant": "Quyền"
+    }
+  },
+  "moduleActions": {
+    "title": "Quản lý module và action",
+    "subtitle": "Quản lý cấu trúc module và action trong hệ thống. Hỗ trợ phân cấp và phân quyền.",
+    "search": "Tìm kiếm module, action...",
+    "allStatuses": "Tất cả trạng thái",
+    "createRootModule": "Tạo module gốc",
+    "createChildModule": "Thêm module con",
+    "createAction": "Thêm action",
+    "scaffoldActions": "Tạo bộ action CRUD chuẩn",
+    "scaffoldSuccess": "Đã tạo action",
+    "scaffoldNoop": "Module đã có đủ action CRUD chuẩn",
+    "cloneModule": "Nhân bản module",
+    "cloneSuccess": "Đã nhân bản module",
+    "edit": "Sửa",
+    "lock": "Ngưng hoạt động",
+    "unlock": "Kích hoạt",
+    "archive": "Lưu trữ",
+    "restore": "Khôi phục",
+    "delete": "Xóa",
+    "viewRoles": "Xem vai trò có quyền này",
+    "noRolesGranted": "Chưa role nào được cấp quyền này",
+    "insightsTitle": "Cảnh báo dọn dẹp",
+    "insightsUnusedActions": "Action chưa cấp quyền",
+    "insightsEmptyModules": "Module rỗng",
+    "insightsUnusedRoles": "Role không dùng",
+    "perMinute": "phút",
+    "noResults": "Không tìm thấy module hoặc action nào",
+    "columns": {
+      "code": "Mã",
+      "name": "Tên",
+      "path": "Đường dẫn",
+      "elementId": "ElementId",
+      "order": "Thứ tự",
+      "status": "Trạng thái",
+      "type": "Loại",
+      "description": "Mô tả",
+      "actions": "Thao tác"
+    },
+    "status": {
+      "active": "Hoạt động",
+      "inactive": "Ngưng hoạt động",
+      "archived": "Đã lưu trữ"
+    },
+    "type": {
+      "module": "Module",
+      "subModule": "Module con",
+      "action": "Action",
+      "menu": "Menu",
+      "screen": "Function/Screen"
+    },
+    "form": {
+      "createModuleTitle": "Tạo module",
+      "editModuleTitle": "Sửa module",
+      "createActionTitle": "Tạo action",
+      "editActionTitle": "Sửa action",
+      "moduleCode": "Mã module",
+      "moduleName": "Tên module",
+      "moduleType": "Loại module",
+      "moduleTypeMenu": "Menu (hiện trên Sidebar)",
+      "moduleTypeScreen": "Function/Screen (không hiện trên Sidebar)",
+      "moduleIcon": "Icon",
+      "moduleHref": "Đường dẫn",
+      "moduleElementId": "ElementId",
+      "moduleIndex": "Số thứ tự sắp xếp",
+      "rateLimit": "Giới hạn gọi/phút",
+      "rateLimitPlaceholder": "Để trống = không giới hạn",
+      "actionCode": "Mã action",
+      "actionName": "Tên action",
+      "description": "Mô tả",
+      "cancel": "Hủy",
+      "save": "Lưu"
+    },
+    "confirmDeleteModule": "Xóa vĩnh viễn module đã lưu trữ này? Không thể hoàn tác — toàn bộ module con, action và quyền đã gán liên quan sẽ bị xóa theo.",
+    "confirmDeleteAction": "Xóa vĩnh viễn action đã lưu trữ này? Không thể hoàn tác — nó sẽ bị gỡ khỏi mọi vai trò đã được gán quyền này."
+  },
+  "auditLogs": {
+    "title": "Nhật ký hệ thống",
+    "allActions": "Tất cả hành động",
+    "allStatuses": "Tất cả trạng thái",
+    "columns": {
+      "time": "Thời gian",
+      "user": "Người dùng",
+      "action": "Hành động",
+      "ip": "Địa chỉ IP",
+      "status": "Trạng thái",
+      "detail": "Chi tiết"
+    }
+  },
+  "profile": {
+    "title": "Hồ sơ của tôi",
+    "infoTitle": "Thông tin tài khoản",
+    "passwordTitle": "Đổi mật khẩu",
+    "currentPassword": "Mật khẩu hiện tại",
+    "newPassword": "Mật khẩu mới",
+    "confirmPassword": "Xác nhận mật khẩu mới",
+    "changePassword": "Đổi mật khẩu",
+    "updated": "Cập nhật hồ sơ thành công",
+    "passwordChanged": "Đổi mật khẩu thành công",
+    "passwordMismatch": "Mật khẩu mới và xác nhận không khớp"
+  },
+  "errors": {
+    "ERR_INVALID_CREDENTIALS": "Tên đăng nhập hoặc mật khẩu không đúng",
+    "ERR_INVALID_CURRENT_PASSWORD": "Mật khẩu hiện tại không đúng",
+    "ERR_ACCOUNT_LOCKED": "Tài khoản đang bị khóa tạm thời. Vui lòng thử lại sau",
+    "ERR_ACCOUNT_DISABLED": "Tài khoản này đã bị vô hiệu hóa",
+    "ERR_TOO_MANY_ATTEMPTS": "Đăng nhập sai quá nhiều lần. Vui lòng thử lại sau",
+    "ERR_TOO_MANY_REQUESTS": "Bạn thao tác quá nhanh, vui lòng thử lại sau",
+    "ERR_PERMISSION_DENIED": "Bạn không có quyền thực hiện thao tác này",
+    "ERR_PROTECTED_ROLE": "Vai trò Administrator không thể bị chỉnh sửa",
+    "ERR_NOT_FOUND": "Không tìm thấy dữ liệu",
+    "ERR_VALIDATION": "Vui lòng kiểm tra lại thông tin đã nhập",
+    "ERR_DUPLICATE": "Dữ liệu này đã tồn tại",
+    "ERR_SERVER": "Đã có lỗi xảy ra. Vui lòng thử lại",
+    "ERR_UNKNOWN": "Lỗi không xác định"
+  },
+  "validation": {
+    "required": "{{field}} là bắt buộc",
+    "tooShort": "{{field}} quá ngắn",
+    "tooLong": "{{field}} quá dài",
+    "invalidFormat": "{{field}} không đúng định dạng",
+    "mustMatch": "{{field}} không khớp",
+    "noFieldsToUpdate": "Không có thông tin nào để cập nhật",
+    "default": "{{field}} không hợp lệ"
+  }
+}

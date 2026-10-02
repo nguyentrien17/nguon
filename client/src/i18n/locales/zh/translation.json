@@ -1,0 +1,250 @@
+{
+  "app": {
+    "title": "企业 RBAC 管理门户"
+  },
+  "common": {
+    "close": "关闭"
+  },
+  "login": {
+    "heroTitle": "欢迎回来！",
+    "heroSubtitle": "登录以管理用户、角色和权限。",
+    "formTitle": "登录",
+    "title": "登录您的账户",
+    "username": "用户名",
+    "email": "电子邮箱",
+    "password": "密码",
+    "submit": "登录",
+    "loading": "正在登录...",
+    "forgotPassword": "忘记密码？"
+  },
+  "forgotPassword": {
+    "heroTitle": "忘记密码了吗？",
+    "heroSubtitle": "别担心，输入您的邮箱，我们将发送重置链接给您。",
+    "formTitle": "重置密码",
+    "formSubtitle": "我们会向您发送一封包含重置密码链接的邮件。",
+    "submit": "发送重置链接",
+    "loading": "正在发送...",
+    "sentTitle": "请查收您的邮箱",
+    "sentSubtitle": "如果 {{email}} 存在对应账户，我们已向该邮箱发送了密码重置链接。",
+    "backToLogin": "返回登录"
+  },
+  "resetPassword": {
+    "heroTitle": "设置新密码",
+    "heroSubtitle": "请选择一个您从未使用过的强密码。",
+    "formTitle": "新密码",
+    "formSubtitle": "请输入并确认您的新密码。",
+    "newPassword": "新密码",
+    "confirmPassword": "确认新密码",
+    "submit": "重置密码",
+    "loading": "正在处理...",
+    "doneTitle": "密码已更新",
+    "doneSubtitle": "您的密码已成功重置，现在可以登录了。",
+    "errors": {
+      "tooShort": "密码至少需要 8 个字符",
+      "mismatch": "两次输入的密码不一致",
+      "missingToken": "此重置链接无效或已过期，请重新申请。"
+    }
+  },
+  "nav": {
+    "dashboard": "仪表盘",
+    "users": "用户管理",
+    "permissions": "角色与权限",
+    "auditLogs": "审计日志",
+    "moduleActions": "模块与操作",
+    "logout": "退出登录"
+  },
+  "dashboard": {
+    "welcome": "欢迎回来，{{name}}"
+  },
+  "users": {
+    "title": "用户管理",
+    "search": "按用户名、邮箱或姓名搜索",
+    "create": "新建用户",
+    "edit": "编辑",
+    "lock": "锁定",
+    "unlock": "解锁",
+    "manageRoles": "管理角色",
+    "export": "导出 Excel",
+    "columns": {
+      "username": "用户名",
+      "email": "邮箱",
+      "fullName": "姓名",
+      "status": "状态",
+      "createdAt": "创建时间",
+      "actions": "操作"
+    },
+    "status": {
+      "active": "启用",
+      "locked": "已锁定"
+    },
+    "form": {
+      "usernameLabel": "用户名",
+      "emailLabel": "邮箱",
+      "passwordLabel": "密码",
+      "fullNameLabel": "姓名",
+      "rolesLabel": "分配角色",
+      "save": "保存",
+      "cancel": "取消"
+    }
+  },
+  "permissions": {
+    "title": "角色与权限",
+    "create": "新建角色",
+    "createChild": "添加子角色",
+    "updateTitle": "更新权限",
+    "roleName": "角色名称",
+    "roleCode": "角色代码",
+    "roleDescription": "描述",
+    "parentRole": "上级角色",
+    "viewGrants": "查看已授予的权限",
+    "noGrants": "该角色尚未被授予任何权限。",
+    "search": "角色代码、角色名称...",
+    "matrix": "权限矩阵",
+    "tabInfo": "基本信息",
+    "tabPermissions": "选择权限",
+    "applyPreset": "应用",
+    "presets": {
+      "view_only": "仅查看",
+      "editor": "编辑(查看/新增/修改)",
+      "full": "完全权限"
+    },
+    "roleColumns": {
+      "code": "角色代码",
+      "name": "角色名称",
+      "description": "描述",
+      "userCount": "账号数",
+      "createdAt": "创建时间",
+      "actions": "操作"
+    },
+    "columns": {
+      "code": "权限/操作代码",
+      "name": "权限/操作名称",
+      "path": "路径/元素 ID",
+      "grant": "授权"
+    }
+  },
+  "moduleActions": {
+    "title": "模块与操作管理",
+    "subtitle": "管理系统的模块和操作结构，支持分级和权限范围。",
+    "search": "搜索模块、操作...",
+    "allStatuses": "全部状态",
+    "createRootModule": "新建根模块",
+    "createChildModule": "添加子模块",
+    "createAction": "添加操作",
+    "scaffoldActions": "创建标准CRUD操作",
+    "scaffoldSuccess": "已创建操作",
+    "scaffoldNoop": "模块已拥有全部标准CRUD操作",
+    "cloneModule": "克隆模块",
+    "cloneSuccess": "已克隆模块",
+    "edit": "编辑",
+    "lock": "停用",
+    "unlock": "启用",
+    "archive": "归档",
+    "restore": "恢复",
+    "delete": "删除",
+    "viewRoles": "查看拥有此权限的角色",
+    "noRolesGranted": "尚无角色被授予此权限",
+    "insightsTitle": "清理提醒",
+    "insightsUnusedActions": "未授权操作",
+    "insightsEmptyModules": "空模块",
+    "insightsUnusedRoles": "未使用角色",
+    "perMinute": "分钟",
+    "noResults": "未找到模块或操作",
+    "columns": {
+      "code": "代码",
+      "name": "名称",
+      "path": "路径",
+      "elementId": "元素 ID",
+      "order": "排序",
+      "status": "状态",
+      "type": "类型",
+      "description": "描述",
+      "actions": "操作"
+    },
+    "status": {
+      "active": "启用",
+      "inactive": "已停用",
+      "archived": "已归档"
+    },
+    "type": {
+      "module": "模块",
+      "subModule": "子模块",
+      "action": "操作",
+      "menu": "菜单",
+      "screen": "功能/页面"
+    },
+    "form": {
+      "createModuleTitle": "新建模块",
+      "editModuleTitle": "编辑模块",
+      "createActionTitle": "新建操作",
+      "editActionTitle": "编辑操作",
+      "moduleCode": "模块代码",
+      "moduleName": "模块名称",
+      "moduleType": "模块类型",
+      "moduleTypeMenu": "菜单(显示在侧边栏)",
+      "moduleTypeScreen": "功能/页面(不显示在侧边栏)",
+      "moduleIcon": "图标",
+      "moduleHref": "路径",
+      "moduleElementId": "元素 ID",
+      "moduleIndex": "排序号",
+      "rateLimit": "每分钟调用限制",
+      "rateLimitPlaceholder": "留空 = 不限制",
+      "actionCode": "操作代码",
+      "actionName": "操作名称",
+      "description": "描述",
+      "cancel": "取消",
+      "save": "保存"
+    },
+    "confirmDeleteModule": "永久删除此已归档模块？此操作不可撤销——其所有子模块、操作及相关已授予的权限都将被删除。",
+    "confirmDeleteAction": "永久删除此已归档操作？此操作不可撤销——所有已被授予该操作的角色都会移除此权限。"
+  },
+  "auditLogs": {
+    "title": "审计日志",
+    "allActions": "全部操作",
+    "allStatuses": "全部状态",
+    "columns": {
+      "time": "时间",
+      "user": "用户",
+      "action": "操作",
+      "ip": "IP 地址",
+      "status": "状态",
+      "detail": "详情"
+    }
+  },
+  "profile": {
+    "title": "我的资料",
+    "infoTitle": "账户信息",
+    "passwordTitle": "修改密码",
+    "currentPassword": "当前密码",
+    "newPassword": "新密码",
+    "confirmPassword": "确认新密码",
+    "changePassword": "修改密码",
+    "updated": "资料更新成功",
+    "passwordChanged": "密码修改成功",
+    "passwordMismatch": "新密码与确认密码不一致"
+  },
+  "errors": {
+    "ERR_INVALID_CREDENTIALS": "用户名或密码不正确",
+    "ERR_INVALID_CURRENT_PASSWORD": "当前密码不正确",
+    "ERR_ACCOUNT_LOCKED": "账户已被临时锁定，请稍后重试",
+    "ERR_ACCOUNT_DISABLED": "该账户已被禁用",
+    "ERR_TOO_MANY_ATTEMPTS": "登录尝试次数过多，请稍后重试",
+    "ERR_TOO_MANY_REQUESTS": "请求过于频繁，请稍后重试",
+    "ERR_PERMISSION_DENIED": "您没有权限执行此操作",
+    "ERR_PROTECTED_ROLE": "管理员角色不可修改",
+    "ERR_NOT_FOUND": "未找到相关数据",
+    "ERR_VALIDATION": "请检查输入的信息",
+    "ERR_DUPLICATE": "该记录已存在",
+    "ERR_SERVER": "出现错误，请重试",
+    "ERR_UNKNOWN": "未知错误"
+  },
+  "validation": {
+    "required": "{{field}} 为必填项",
+    "tooShort": "{{field}} 太短",
+    "tooLong": "{{field}} 太长",
+    "invalidFormat": "{{field}} 格式不正确",
+    "mustMatch": "{{field}} 不匹配",
+    "noFieldsToUpdate": "没有需要更新的信息",
+    "default": "{{field}} 无效"
+  }
+}

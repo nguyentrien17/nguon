@@ -1,0 +1,250 @@
+{
+  "app": {
+    "title": "Enterprise RBAC Portal"
+  },
+  "common": {
+    "close": "Close"
+  },
+  "login": {
+    "heroTitle": "Welcome Back!",
+    "heroSubtitle": "Sign in with your account to manage users, roles and permissions.",
+    "formTitle": "Login",
+    "title": "Sign in to your account",
+    "username": "Username",
+    "email": "Email address",
+    "password": "Password",
+    "submit": "Sign in",
+    "loading": "Signing in...",
+    "forgotPassword": "Forgot password?"
+  },
+  "forgotPassword": {
+    "heroTitle": "Forgot your password?",
+    "heroSubtitle": "No worries, enter your email and we'll send you a reset link.",
+    "formTitle": "Reset password",
+    "formSubtitle": "We'll email you a link to reset your password.",
+    "submit": "Send reset link",
+    "loading": "Sending...",
+    "sentTitle": "Check your email",
+    "sentSubtitle": "If an account exists for {{email}}, we've sent a password reset link to it.",
+    "backToLogin": "Back to login"
+  },
+  "resetPassword": {
+    "heroTitle": "Set a new password",
+    "heroSubtitle": "Choose a strong password you haven't used before.",
+    "formTitle": "New password",
+    "formSubtitle": "Enter and confirm your new password.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "submit": "Reset password",
+    "loading": "Resetting...",
+    "doneTitle": "Password updated",
+    "doneSubtitle": "Your password has been reset successfully. You can now sign in.",
+    "errors": {
+      "tooShort": "Password must be at least 8 characters",
+      "mismatch": "Passwords do not match",
+      "missingToken": "This reset link is invalid or has expired. Please request a new one."
+    }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "users": "User Management",
+    "permissions": "Role & Permission",
+    "auditLogs": "Audit Log",
+    "moduleActions": "Module & Action",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "welcome": "Welcome back, {{name}}"
+  },
+  "users": {
+    "title": "User Management",
+    "search": "Search by username, email or name",
+    "create": "New User",
+    "edit": "Edit",
+    "lock": "Lock",
+    "unlock": "Unlock",
+    "manageRoles": "Manage roles",
+    "export": "Export Excel",
+    "columns": {
+      "username": "Username",
+      "email": "Email",
+      "fullName": "Full name",
+      "status": "Status",
+      "createdAt": "Created at",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "locked": "Locked"
+    },
+    "form": {
+      "usernameLabel": "Username",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "fullNameLabel": "Full name",
+      "rolesLabel": "Assign roles",
+      "save": "Save",
+      "cancel": "Cancel"
+    }
+  },
+  "permissions": {
+    "title": "Role & Permission",
+    "create": "New Role",
+    "createChild": "Add sub-role",
+    "updateTitle": "Update Role",
+    "roleName": "Role name",
+    "roleCode": "Role code",
+    "roleDescription": "Description",
+    "parentRole": "Parent role",
+    "viewGrants": "View granted permissions",
+    "noGrants": "This role has no permissions granted yet.",
+    "search": "Role code, role name...",
+    "matrix": "Permission matrix",
+    "tabInfo": "Basic information",
+    "tabPermissions": "Select permissions",
+    "applyPreset": "Apply",
+    "presets": {
+      "view_only": "View only",
+      "editor": "Editor (view/create/edit)",
+      "full": "Full access"
+    },
+    "roleColumns": {
+      "code": "Role code",
+      "name": "Role name",
+      "description": "Description",
+      "userCount": "Accounts",
+      "createdAt": "Created at",
+      "actions": "Actions"
+    },
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "path": "Path / Element ID",
+      "grant": "Grant"
+    }
+  },
+  "moduleActions": {
+    "title": "Module & Action Management",
+    "subtitle": "Manage the module and action structure of the system. Supports hierarchy and permission scoping.",
+    "search": "Search module, action...",
+    "allStatuses": "All statuses",
+    "createRootModule": "New root module",
+    "createChildModule": "Add sub-module",
+    "createAction": "Add action",
+    "scaffoldActions": "Create standard CRUD actions",
+    "scaffoldSuccess": "Actions created",
+    "scaffoldNoop": "Module already has all standard CRUD actions",
+    "cloneModule": "Clone module",
+    "cloneSuccess": "Module cloned",
+    "edit": "Edit",
+    "lock": "Deactivate",
+    "unlock": "Activate",
+    "archive": "Archive",
+    "restore": "Restore",
+    "delete": "Delete",
+    "viewRoles": "View roles with this permission",
+    "noRolesGranted": "No role has been granted this permission",
+    "insightsTitle": "Cleanup warnings",
+    "insightsUnusedActions": "Ungranted actions",
+    "insightsEmptyModules": "Empty modules",
+    "insightsUnusedRoles": "Unused roles",
+    "perMinute": "min",
+    "noResults": "No modules or actions found",
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "path": "Path",
+      "elementId": "Element ID",
+      "order": "Order",
+      "status": "Status",
+      "type": "Type",
+      "description": "Description",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "archived": "Archived"
+    },
+    "type": {
+      "module": "Module",
+      "subModule": "Sub-module",
+      "action": "Action",
+      "menu": "Menu",
+      "screen": "Function/Screen"
+    },
+    "form": {
+      "createModuleTitle": "New module",
+      "editModuleTitle": "Edit module",
+      "createActionTitle": "New action",
+      "editActionTitle": "Edit action",
+      "moduleCode": "Module code",
+      "moduleName": "Module name",
+      "moduleType": "Module type",
+      "moduleTypeMenu": "Menu (shows in Sidebar)",
+      "moduleTypeScreen": "Function/Screen (not shown in Sidebar)",
+      "moduleIcon": "Icon",
+      "moduleHref": "Path",
+      "moduleElementId": "Element ID",
+      "moduleIndex": "Sort order",
+      "rateLimit": "Rate limit (per minute)",
+      "rateLimitPlaceholder": "Blank = unlimited",
+      "actionCode": "Action code",
+      "actionName": "Action name",
+      "description": "Description",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "confirmDeleteModule": "Permanently delete this archived module? This cannot be undone — all its sub-modules, actions and granted permissions will be removed.",
+    "confirmDeleteAction": "Permanently delete this archived action? This cannot be undone — it will be removed from all roles that were granted it."
+  },
+  "auditLogs": {
+    "title": "Audit Log",
+    "allActions": "All actions",
+    "allStatuses": "All statuses",
+    "columns": {
+      "time": "Time",
+      "user": "User",
+      "action": "Action",
+      "ip": "IP address",
+      "status": "Status",
+      "detail": "Detail"
+    }
+  },
+  "profile": {
+    "title": "My Profile",
+    "infoTitle": "Account information",
+    "passwordTitle": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "changePassword": "Change password",
+    "updated": "Profile updated successfully",
+    "passwordChanged": "Password changed successfully",
+    "passwordMismatch": "New password and confirmation do not match"
+  },
+  "errors": {
+    "ERR_INVALID_CREDENTIALS": "Invalid username or password",
+    "ERR_INVALID_CURRENT_PASSWORD": "Current password is incorrect",
+    "ERR_ACCOUNT_LOCKED": "Account is temporarily locked. Please try again later",
+    "ERR_ACCOUNT_DISABLED": "This account has been disabled",
+    "ERR_TOO_MANY_ATTEMPTS": "Too many login attempts. Please try again later",
+    "ERR_TOO_MANY_REQUESTS": "Too many requests. Please slow down",
+    "ERR_PERMISSION_DENIED": "You do not have permission to perform this action",
+    "ERR_PROTECTED_ROLE": "The Administrator role cannot be modified",
+    "ERR_NOT_FOUND": "The requested item was not found",
+    "ERR_VALIDATION": "Please check the entered information",
+    "ERR_DUPLICATE": "This record already exists",
+    "ERR_SERVER": "Something went wrong. Please try again",
+    "ERR_UNKNOWN": "Unknown error"
+  },
+  "validation": {
+    "required": "{{field}} is required",
+    "tooShort": "{{field}} is too short",
+    "tooLong": "{{field}} is too long",
+    "invalidFormat": "{{field}} has an invalid format",
+    "mustMatch": "{{field}} does not match",
+    "noFieldsToUpdate": "No fields to update",
+    "default": "{{field}} is invalid"
+  }
+}
