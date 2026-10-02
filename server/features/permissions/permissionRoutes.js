@@ -8,9 +8,10 @@ const {
     assignRoleToUser,
     unassignRoleFromUser,
 } = require('./permissionController');
-const { authenticate, requirePermission } = require('../../middlewares/authMiddleware');
-const { validateBody } = require('../../middlewares/validate');
-const verifySignature = require('../../middlewares/verifySignature');
+const { authenticate } = require('#core/security/authenticate');
+const { requirePermission } = require('./permissionMiddleware');
+const { validateBody } = require('#core/http/validate');
+const verifySignature = require('#core/security/verifySignature');
 const { createPermissionSchema, updatePermissionSchema, assignRoleSchema } = require('./permissionValidators');
 const { MODULE_CODE, ACTION_CODE } = require('#shared');
 

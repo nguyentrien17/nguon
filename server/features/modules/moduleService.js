@@ -2,8 +2,8 @@ const moduleModel = require('./moduleModel');
 const actionModel = require('#features/actions/actionModel');
 const actionService = require('#features/actions/actionService');
 const auditLogModel = require('#features/audit-logs/auditLogModel');
-const AppError = require('../../utils/AppError');
-const { buildFieldDiff } = require('../../utils/auditDiff');
+const AppError = require('#core/errors/AppError');
+const { buildFieldDiff } = require('#core/utils/auditDiff');
 const { AUDIT_STATUS, AUDIT_ACTION, RECORD_STATUS, ERROR_CODE } = require('#shared');
 
 function isDuplicateEntry(err) {

@@ -2,8 +2,8 @@ const actionModel = require('./actionModel');
 const moduleModel = require('#features/modules/moduleModel');
 const permissionModel = require('#features/permissions/permissionModel');
 const auditLogModel = require('#features/audit-logs/auditLogModel');
-const AppError = require('../../utils/AppError');
-const { buildFieldDiff } = require('../../utils/auditDiff');
+const AppError = require('#core/errors/AppError');
+const { buildFieldDiff } = require('#core/utils/auditDiff');
 const { AUDIT_STATUS, AUDIT_ACTION, PROTECTED_ROLE_CODE, ACTION_CODE, RECORD_STATUS, ERROR_CODE } = require('#shared');
 
 const STANDARD_ACTIONS = [

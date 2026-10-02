@@ -1,4 +1,4 @@
-const db = require('../../config/database');
+const db = require('#core/database/db');
 const permissionModel = require('#features/permissions/permissionModel');
 
 // Actions chưa được role nào cấp quyền (kể cả ROLE_ADMIN) — ứng viên dọn dẹp hoặc thiếu auto-grant.

@@ -1,14 +1,15 @@
 const ms = require('ms');
 const authService = require('./authService');
-const asyncHandler = require('../../utils/asyncHandler');
-const { REFRESH_EXPIRES_IN } = require('../../utils/jwt');
+const asyncHandler = require('#core/http/asyncHandler');
+const { REFRESH_EXPIRES_IN } = require('#core/security/jwt');
+const env = require('#core/config/env');
 
 const REFRESH_COOKIE_NAME = authService.REFRESH_COOKIE_NAME;
 
 function setRefreshCookie(res, refreshToken) {
     res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: env.isProduction,
         sameSite: 'strict',
         maxAge: ms(REFRESH_EXPIRES_IN),
         path: '/api/auth',

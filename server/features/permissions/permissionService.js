@@ -3,8 +3,9 @@ const moduleModel = require('#features/modules/moduleModel');
 const actionModel = require('#features/actions/actionModel');
 const userModel = require('#features/users/userModel');
 const auditLogModel = require('#features/audit-logs/auditLogModel');
-const AppError = require('../../utils/AppError');
-const { buildFieldDiff, buildPermissionDiff } = require('../../utils/auditDiff');
+const AppError = require('#core/errors/AppError');
+const { buildFieldDiff } = require('#core/utils/auditDiff');
+const { buildPermissionDiff } = require('./permissionDiff');
 const { AUDIT_STATUS, AUDIT_ACTION, PROTECTED_ROLE_CODE, ACTION_CODE, ERROR_CODE } = require('#shared');
 
 function isDuplicateEntry(err) {

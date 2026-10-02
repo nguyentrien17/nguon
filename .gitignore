@@ -1,5 +1,11 @@
 node_modules
 .env
 .env.*
+# .env.example là template không chứa secret thật — phải được track để §7 (cung cấp
+# .env.example) có hiệu lực, nên loại trừ khỏi pattern .env.* ở trên.
+!.env.example
 *.log
 .DS_Store
+dist
+build
+coverage

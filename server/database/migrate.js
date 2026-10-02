@@ -4,21 +4,21 @@
 // khi migrations/ có file mới thêm vào sau này).
 //
 // multipleStatements chỉ mở cho kết nối riêng của script này (mỗi file .sql có thể chứa
-// nhiều câu ALTER/CREATE INDEX) — không mở cho pool chính của app (server/config/database.js)
+// nhiều câu ALTER/CREATE INDEX) — không mở cho pool chính của app (server/core/database/db.js)
 // để không mở rộng bề mặt SQL injection lúc runtime.
 const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
-require('dotenv').config();
+const env = require('#core/config/env');
 
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
 
 async function run() {
     const connection = await mysql.createConnection({
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME,
+        host: env.db.host,
+        user: env.db.user,
+        password: env.db.password,
+        database: env.db.name,
         multipleStatements: true,
     });
 

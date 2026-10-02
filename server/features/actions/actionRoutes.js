@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { listActions, createAction, updateAction, deleteAction, scaffoldActions, archiveAction, restoreAction } = require('./actionController');
-const { authenticate, requirePermission } = require('../../middlewares/authMiddleware');
-const { validateBody } = require('../../middlewares/validate');
-const { rateLimitForAction } = require('../../middlewares/actionRateLimiter');
-const verifySignature = require('../../middlewares/verifySignature');
+const { authenticate } = require('#core/security/authenticate');
+const { requirePermission } = require('#features/permissions/permissionMiddleware');
+const { validateBody } = require('#core/http/validate');
+const { rateLimitForAction } = require('#features/actions/actionRateLimiter');
+const verifySignature = require('#core/security/verifySignature');
 const { createActionSchema, updateActionSchema } = require('./actionValidators');
 const { emptyBodySchema } = require('../../../shared/validators/common');
 const { MODULE_CODE, ACTION_CODE } = require('#shared');

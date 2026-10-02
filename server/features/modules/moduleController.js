@@ -1,5 +1,5 @@
 const moduleService = require('./moduleService');
-const asyncHandler = require('../../utils/asyncHandler');
+const asyncHandler = require('#core/http/asyncHandler');
 
 const listModules = asyncHandler(async (req, res) => {
     const data = await moduleService.listModules();

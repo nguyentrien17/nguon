@@ -1,5 +1,5 @@
-const db = require('../../config/database');
-const baseRepository = require('../../utils/baseRepository');
+const db = require('#core/database/db');
+const baseRepository = require('#core/database/baseRepository');
 
 const base = baseRepository('users');
 

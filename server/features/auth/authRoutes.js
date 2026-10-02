@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { login, refresh, logout, me, updateMe, changePassword, forgotPassword, resetPassword } = require('./authController');
-const { loginLimiter } = require('../../middlewares/rateLimiter');
-const { authenticate } = require('../../middlewares/authMiddleware');
-const { validateBody } = require('../../middlewares/validate');
-const verifySignature = require('../../middlewares/verifySignature');
+const { loginLimiter } = require('#core/security/rateLimiter');
+const { authenticate } = require('#core/security/authenticate');
+const { validateBody } = require('#core/http/validate');
+const verifySignature = require('#core/security/verifySignature');
 const { loginSchema, updateProfileSchema, changePasswordSchema, forgotPasswordSchema, resetPasswordSchema } = require('./authValidators');
 
 router.post('/login', loginLimiter, validateBody(loginSchema), login);

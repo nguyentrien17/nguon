@@ -1,5 +1,5 @@
 const actionService = require('./actionService');
-const asyncHandler = require('../../utils/asyncHandler');
+const asyncHandler = require('#core/http/asyncHandler');
 
 const listActions = asyncHandler(async (req, res) => {
     const data = await actionService.listActions();

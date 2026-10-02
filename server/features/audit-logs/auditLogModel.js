@@ -1,5 +1,6 @@
-const db = require('../../config/database');
-const baseRepository = require('../../utils/baseRepository');
+const db = require('#core/database/db');
+const baseRepository = require('#core/database/baseRepository');
+const logger = require('#core/logger');
 
 const base = baseRepository('audit_logs');
 
@@ -7,7 +8,7 @@ async function create({ userId = null, action, ip, status, detail = null }) {
     try {
         await base.create({ user_id: userId, action, ip_address: ip, status, detail });
     } catch (err) {
-        console.error('Audit log failed:', err.message);
+        logger.error('Audit log failed:', err.message);
     }
 }
 

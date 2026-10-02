@@ -1,4 +1,6 @@
 node_modules
 .env
 .env.*
+# Xem ghi chú ở .gitignore gốc — .env.example là template, không chứa secret thật.
+!.env.example
 *.log

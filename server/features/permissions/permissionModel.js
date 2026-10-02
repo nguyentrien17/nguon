@@ -1,5 +1,5 @@
-const db = require('../../config/database');
-const baseRepository = require('../../utils/baseRepository');
+const db = require('#core/database/db');
+const baseRepository = require('#core/database/baseRepository');
 
 const base = baseRepository('permissions');
 const findRoleById = base.findById;
@@ -24,7 +24,7 @@ async function userHasRole(userId, roleCode) {
 }
 
 // Gộp userHasRole + getUserPermissions thành 1 round-trip DB duy nhất — dùng cho
-// authMiddleware (requirePermission/requireAnyPermission) vì middleware này chạy trên
+// permissionMiddleware (requirePermission/requireAnyPermission) vì middleware này chạy trên
 // MỌI request được bảo vệ, nên tiết kiệm 1 query/request đáng để đánh đổi độ phức tạp.
 async function getUserAccess(userId, protectedRoleCode) {
     const rows = await db('user_permissions as up')

@@ -1,5 +1,5 @@
 const insightsService = require('./insightsService');
-const asyncHandler = require('../../utils/asyncHandler');
+const asyncHandler = require('#core/http/asyncHandler');
 
 const getModuleActionInsights = asyncHandler(async (req, res) => {
     const data = await insightsService.getModuleActionInsights();

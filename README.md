@@ -6,9 +6,23 @@ Hệ thống quản lý người dùng / phân quyền (RBAC): users, roles (per
 
 ```
 client/   React + Vite SPA
-server/   Express API (feature-based: controller-service-model-routes-validators)
+          ├── app/       khởi tạo ứng dụng (App, router, providers, layout)
+          ├── core/      hạ tầng FE (api, auth, permissions, errors)
+          └── features/  nghiệp vụ theo trang
+server/   Express API
+          ├── core/      hạ tầng kỹ thuật, không chứa nghiệp vụ (config, db, errors, http, security)
+          └── features/  nghiệp vụ (controller-service-model-routes-validators)
 shared/   Validator (zod) + constants dùng chung giữa client và server
+docs/     Tài liệu kiến trúc
+tailieu/  Tài liệu đầu vào của dự án (SRS, kế hoạch refactor)
 ```
+
+Trước khi sửa code, đọc:
+
+- [docs/architecture.md](docs/architecture.md) — Core/Features/Shared là gì, luồng một request
+- [docs/folder-structure.md](docs/folder-structure.md) — file nào ở đâu, alias `#core/*`/`#features/*`
+- [docs/dependency-rules.md](docs/dependency-rules.md) — module nào được import module nào
+- [docs/api-conventions.md](docs/api-conventions.md) — format response, cách phát sinh lỗi
 
 ## Yêu cầu
 
@@ -46,6 +60,15 @@ npm run dev             # http://localhost:5000
 
 Biến môi trường bắt buộc: `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` — thiếu biến nào server sẽ báo lỗi và dừng ngay lúc khởi động.
 
+Khi deploy production **phải** đặt `NODE_ENV=production`: cờ `Secure` của cookie refresh token phụ thuộc vào biến này. Thiếu nó server chỉ cảnh báo chứ không dừng, nên rất dễ bị bỏ qua.
+
+Kiểm tra nhanh sau khi cài (không cần MySQL đang chạy):
+
+```bash
+cd server
+npm run smoke     # load toàn bộ import graph, bắt lỗi đường dẫn require/alias
+```
+
 ### 3. Client
 
 ```bash
@@ -62,6 +85,7 @@ npm run dev              # http://localhost:5173
 
 - `GET /health` — health check.
 - Server tự đóng connection pool DB khi nhận `SIGTERM`/`SIGINT` (graceful shutdown).
-- Quên mật khẩu (`/forgot-password`): chưa cấu hình SMTP/email provider thật — link reset hiện chỉ được log ra console server (`server/utils/mailer.js`). Cần thay bằng provider thật (SendGrid/SES/SMTP...) trước khi dùng production.
+- Quên mật khẩu (`/forgot-password`): chưa cấu hình SMTP/email provider thật — link reset hiện chỉ được log ra console server (`server/core/mailer.js`). Cần thay bằng provider thật (SendGrid/SES/SMTP...) trước khi dùng production.
 - `npm run audit` (root/client/server) chạy `npm audit --omit=dev`.
-- Chưa có test tự động, CI, hay Dockerfile — cần bổ sung nếu deploy production.
+- `LOG_LEVEL` (`error`/`warn`/`info`/`debug`) điều chỉnh độ chi tiết của application log; mặc định `debug` ở development, `info` ở production.
+- Test tự động hiện chỉ có `server`: `npm run smoke`. Chưa có unit/integration test, chưa có CI, chưa có Dockerfile — cần bổ sung nếu deploy production.

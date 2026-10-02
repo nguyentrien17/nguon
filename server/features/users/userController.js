@@ -1,7 +1,7 @@
 const userService = require('./userService');
 const permissionService = require('#features/permissions/permissionService');
-const asyncHandler = require('../../utils/asyncHandler');
-const { buildUsersWorkbook } = require('../../utils/exportExcel');
+const asyncHandler = require('#core/http/asyncHandler');
+const { buildUsersWorkbook } = require('./userExport');
 
 const listUsers = asyncHandler(async (req, res) => {
     const page = Math.max(parseInt(req.query.page) || 1, 1);

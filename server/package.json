@@ -5,12 +5,15 @@
   "main": "server.js",
   "imports": {
     "#shared": "./shared.js",
+    "#core/*": "./core/*.js",
     "#features/*": "./features/*.js"
   },
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
     "migrate": "node database/migrate.js",
+    "smoke": "node tests/smoke.load.js",
+    "test:contract": "node tests/contract.api.js",
     "audit": "npm audit --omit=dev"
   },
   "dependencies": {

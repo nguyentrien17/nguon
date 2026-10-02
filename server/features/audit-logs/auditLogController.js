@@ -1,5 +1,5 @@
 const auditLogService = require('./auditLogService');
-const asyncHandler = require('../../utils/asyncHandler');
+const asyncHandler = require('#core/http/asyncHandler');
 
 const listAuditLogs = asyncHandler(async (req, res) => {
     const page = Math.max(parseInt(req.query.page) || 1, 1);

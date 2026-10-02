@@ -1,5 +1,5 @@
 const permissionService = require('./permissionService');
-const asyncHandler = require('../../utils/asyncHandler');
+const asyncHandler = require('#core/http/asyncHandler');
 
 const listPermissions = asyncHandler(async (req, res) => {
     const data = await permissionService.listRoles();

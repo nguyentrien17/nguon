@@ -2,8 +2,8 @@ const bcrypt = require('bcryptjs');
 const userModel = require('./userModel');
 const permissionModel = require('#features/permissions/permissionModel');
 const auditLogModel = require('#features/audit-logs/auditLogModel');
-const AppError = require('../../utils/AppError');
-const { buildFieldDiff } = require('../../utils/auditDiff');
+const AppError = require('#core/errors/AppError');
+const { buildFieldDiff } = require('#core/utils/auditDiff');
 const { USER_STATUS, AUDIT_STATUS, AUDIT_ACTION, ERROR_CODE, MODULE_CODE, ACTION_CODE, PROTECTED_ROLE_CODE } = require('#shared');
 
 function isDuplicateEntry(err) {

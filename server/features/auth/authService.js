@@ -6,10 +6,12 @@ const refreshTokenModel = require('./refreshTokenModel');
 const passwordResetTokenModel = require('./passwordResetTokenModel');
 const permissionModel = require('#features/permissions/permissionModel');
 const auditLogModel = require('#features/audit-logs/auditLogModel');
-const AppError = require('../../utils/AppError');
-const { buildFieldDiff } = require('../../utils/auditDiff');
-const { sendPasswordResetEmail } = require('../../utils/mailer');
-const { signAccessToken, signRefreshToken, verifyRefreshToken, REFRESH_EXPIRES_IN } = require('../../utils/jwt');
+const AppError = require('#core/errors/AppError');
+const { buildFieldDiff } = require('#core/utils/auditDiff');
+const { sendPasswordResetEmail } = require('#core/mailer');
+const env = require('#core/config/env');
+const logger = require('#core/logger');
+const { signAccessToken, signRefreshToken, verifyRefreshToken, REFRESH_EXPIRES_IN } = require('#core/security/jwt');
 const { USER_STATUS, AUDIT_STATUS, AUDIT_ACTION, ERROR_CODE } = require('#shared');
 
 const MAX_FAILED_ATTEMPTS = 5;
@@ -34,7 +36,7 @@ async function issueSession(user) {
     const permissions = await permissionModel.getUserPermissions(user.id);
     // Secret ký request riêng cho phiên này — sinh mới mỗi lần login/refresh, nhúng vào JWT
     // (server tự xác minh lại được, không cần lưu DB) và trả riêng cho client để client không
-    // phải tự giải mã JWT. Xem server/middlewares/verifySignature.js.
+    // phải tự giải mã JWT. Xem server/core/security/verifySignature.js.
     const sigKey = crypto.randomBytes(32).toString('hex');
 
     const payload = {
@@ -53,7 +55,7 @@ async function issueSession(user) {
     // Dọn rác refresh_tokens (revoked/expired) với xác suất thấp thay vì mỗi lần login/refresh
     // đều query thêm — đủ để bảng không phình vô hạn mà không cần thêm cron job riêng.
     if (Math.random() < 0.01) {
-        refreshTokenModel.deleteExpiredAndRevoked().catch((err) => console.error('refresh_tokens cleanup failed:', err.message));
+        refreshTokenModel.deleteExpiredAndRevoked().catch((err) => logger.error('refresh_tokens cleanup failed:', err.message));
     }
 
     return { accessToken, refreshToken, permissions, signingKey: sigKey, user: toPublicUser(user) };
@@ -201,7 +203,7 @@ async function requestPasswordReset({ email, ip }) {
     const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
     await passwordResetTokenModel.create({ userId: user.id, tokenHash: hashToken(token), expiresAt });
 
-    const resetLink = `${process.env.CLIENT_ORIGIN || 'http://localhost:5173'}/reset-password?token=${token}`;
+    const resetLink = `${env.CLIENT_ORIGIN}/reset-password?token=${token}`;
     await sendPasswordResetEmail(user.email, resetLink);
 
     await auditLogModel.create({ userId: user.id, action: AUDIT_ACTION.PASSWORD_RESET_REQUEST, ip, status: AUDIT_STATUS.SUCCESS });
