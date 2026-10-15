@@ -7,6 +7,7 @@
 //
 // KHÔNG đổi tên biến môi trường hiện có — tên ở đây phải khớp .env.example và tài liệu.
 require('dotenv').config();
+const path = require('path');
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
@@ -30,6 +31,8 @@ const env = {
     TRUST_PROXY: parseTrustProxy(process.env.TRUST_PROXY),
     // Số lần /auth/login (và forgot/reset password) tối đa mỗi phút mỗi IP.
     LOGIN_RATE_LIMIT_MAX: Number(process.env.LOGIN_RATE_LIMIT_MAX) || 5,
+    // Thư mục lưu file người dùng tải lên (ảnh đại diện...). Mặc định server/uploads (đã gitignore).
+    UPLOAD_DIR: process.env.UPLOAD_DIR ? path.resolve(process.env.UPLOAD_DIR) : path.resolve(__dirname, '../../uploads'),
 
     db: {
         host: process.env.DB_HOST,

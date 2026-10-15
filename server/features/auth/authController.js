@@ -67,6 +67,17 @@ const updateMe = asyncHandler(async (req, res) => {
     return res.json({ success: true, data });
 });
 
+// multipart/form-data, trường 'avatar' — đã qua singleFileUpload + verifySignature ở route.
+const uploadAvatar = asyncHandler(async (req, res) => {
+    const data = await authService.updateAvatar(req.user.id, { file: req.file, ip: req.ip });
+    return res.json({ success: true, data });
+});
+
+const removeAvatar = asyncHandler(async (req, res) => {
+    const data = await authService.removeAvatar(req.user.id, { ip: req.ip });
+    return res.json({ success: true, data });
+});
+
 const changePassword = asyncHandler(async (req, res) => {
     const { currentPassword, newPassword } = req.body;
     await authService.changePassword(req.user.id, {
@@ -92,4 +103,4 @@ const resetPassword = asyncHandler(async (req, res) => {
     return res.json({ success: true });
 });
 
-module.exports = { login, refresh, logout, me, updateMe, changePassword, forgotPassword, resetPassword };
+module.exports = { login, refresh, logout, me, updateMe, uploadAvatar, removeAvatar, changePassword, forgotPassword, resetPassword };

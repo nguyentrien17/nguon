@@ -4,7 +4,8 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 
 const auth = vi.hoisted(() => ({ value: {} }));
-vi.mock('@/core/auth/AuthContext', () => ({ useAuth: () => auth.value }));
+vi.mock('@/core/auth/SessionContext', () => ({ useSession: () => auth.value }));
+vi.mock('./PermissionsContext', () => ({ usePermissions: () => auth.value }));
 
 function LoginProbe() {
     const location = useLocation();

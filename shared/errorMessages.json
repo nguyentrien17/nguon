@@ -30,7 +30,11 @@
         "validation.invalidFormat": "{{field}} không đúng định dạng",
         "validation.mustMatch": "{{field}} không khớp",
         "validation.noFieldsToUpdate": "Không có thông tin nào để cập nhật",
-        "validation.default": "{{field}} không hợp lệ"
+        "validation.default": "{{field}} không hợp lệ",
+        "ERR_LAST_ADMIN": "Không thể thực hiện: hệ thống phải còn ít nhất một Administrator đang hoạt động",
+        "ERR_PROTECTED_ROLE_ASSIGN": "Chỉ Administrator mới được gán hoặc gỡ vai trò Administrator",
+        "validation.fileTooLarge": "{{field}} vượt quá dung lượng cho phép",
+        "validation.fileType": "{{field}} không đúng định dạng file cho phép"
     },
     "en": {
         "ERR_INVALID_CREDENTIALS": "Invalid username or password",
@@ -63,7 +67,11 @@
         "validation.invalidFormat": "{{field}} has an invalid format",
         "validation.mustMatch": "{{field}} does not match",
         "validation.noFieldsToUpdate": "No fields to update",
-        "validation.default": "{{field}} is invalid"
+        "validation.default": "{{field}} is invalid",
+        "ERR_LAST_ADMIN": "Not allowed: the system must keep at least one active Administrator",
+        "ERR_PROTECTED_ROLE_ASSIGN": "Only an Administrator can assign or remove the Administrator role",
+        "validation.fileTooLarge": "{{field}} is larger than the allowed size",
+        "validation.fileType": "{{field}} is not an allowed file type"
     },
     "zh": {
         "ERR_INVALID_CREDENTIALS": "用户名或密码不正确",
@@ -96,6 +104,10 @@
         "validation.invalidFormat": "{{field}} 格式不正确",
         "validation.mustMatch": "{{field}} 不匹配",
         "validation.noFieldsToUpdate": "没有需要更新的信息",
-        "validation.default": "{{field}} 无效"
+        "validation.default": "{{field}} 无效",
+        "ERR_LAST_ADMIN": "无法执行：系统必须至少保留一名处于活动状态的管理员",
+        "ERR_PROTECTED_ROLE_ASSIGN": "只有管理员才能分配或移除管理员角色",
+        "validation.fileTooLarge": "{{field}} 超过允许的大小",
+        "validation.fileType": "{{field}} 的文件类型不被允许"
     }
 }

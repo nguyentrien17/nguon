@@ -7,14 +7,14 @@ API thật. Client: **vitest** + Testing Library.
 
 | Lệnh | Ở đâu | Cần gì | Kiểm tra gì |
 |---|---|---|---|
-| `npm test` | `server/tests/unit/*.test.js` | **không** cần DB, không cần server | 60 test: error handler + bảng dịch, `validateBody`/`validateParams` + schema shared, `authenticate` (session guard), `verifySignature`, `validateEnv` (chạy trong child process), `permissionMiddleware`, `userService` (guard khoá/chiếm tài khoản admin), `authService` (refresh, ngưỡng khoá đăng nhập) |
+| `npm test` | `server/tests/unit/*.test.js` | **không** cần DB, không cần server | 91 test: upload qua HTTP thật (multer + chữ ký multipart + magic bytes + lưu/xoá file), guard admin cuối cùng + gán role admin, error handler + bảng dịch, `validateBody`/`validateParams` + schema shared, `authenticate` (session guard), `verifySignature`, `validateEnv` (chạy trong child process), `permissionMiddleware`, `userService` (guard khoá/chiếm tài khoản admin), `authService` (refresh, ngưỡng khoá đăng nhập) |
 | `npm run lint` | `server/` | — | ESLint toàn bộ server, **kể cả quy tắc Core không import Features** |
 | `npm run smoke` | `server/tests/smoke.load.js` | không cần DB, không cần server chạy | load 22 entry point, `validateEnv()` chạy được, Core không giành việc phân quyền của Feature |
 | `npm run test:contract` | `server/tests/contract.api.js` | **cần** server đang chạy + MySQL đã seed | 31 assertion về contract API mà client phụ thuộc |
-| `npm run test:security` | `server/tests/users.security.js` | **cần** server đang chạy + MySQL | 27 assertion về guard chống chiếm/khoá tài khoản đặc quyền, thu hồi phiên khi đổi password/khoá user, refresh song song, bộ đếm đăng nhập sai nguyên tử, JSON hỏng → 400, validate `:id`, clamp `limit`, rollback transaction |
+| `npm run test:security` | `server/tests/users.security.js` | **cần** server đang chạy + MySQL (đã chạy migration 012) | 30 assertion về quyền khoá riêng `MOD_USER:lock` (DELETE cũ -> 404), guard chống chiếm/khoá tài khoản đặc quyền, thu hồi phiên khi đổi password/khoá user, refresh song song, bộ đếm đăng nhập sai nguyên tử, JSON hỏng → 400, validate `:id`, clamp `limit`, rollback transaction |
 | `npm run lint` | `client/` | — | eslint toàn bộ `client/src` |
 | `npm run build` | `client/` | — | Vite build, bắt lỗi import/alias |
-| `npm test` | `client/src/**/*.test.{js,jsx}` | **không** cần server | 69 test vitest + Testing Library (jsdom), xem mục 1c |
+| `npm test` | `client/src/**/*.test.{js,jsx}` | **không** cần server | 78 test vitest + Testing Library (jsdom), xem mục 1c |
 
 **Không có:** test cho migration, test end-to-end trên trình duyệt thật, CI.
 
@@ -25,12 +25,13 @@ cd client && npm test          # chạy một lần
 cd client && npm run test:watch
 ```
 
-69 test, ~6 giây. File test đặt **cạnh file được test** (`Form.jsx` ↔ `Form.test.jsx`).
+78 test, ~7 giây. File test đặt **cạnh file được test** (`Form.jsx` ↔ `Form.test.jsx`).
 Hạ tầng trong `client/src/test/`:
 
 - `setup.js` — jest-dom matcher, ngôn ngữ cố định `vi`, dọn DOM/localStorage sau mỗi test.
 - `render.jsx` — `renderWithProviders(ui)`: bọc Router + ToastProvider. **Không** bọc
-  AuthProvider (nó gọi API khôi phục phiên) — test cần `useAuth` thì `vi.mock('@/core/auth/AuthContext')`.
+  AuthProvider (nó gọi API khôi phục phiên) — test cần `useSession` / `usePermissions` /
+  `useModules` thì `vi.mock` đúng module đó, hoặc bọc `<PermissionsProvider permissions={[...]}>` thật.
 - `i18nLabel.js` — `label('users.form.emailLabel')`: tìm ô nhập theo key i18n thay vì chép chữ
   tiếng Việt vào test (đổi bản dịch không làm vỡ test).
 
@@ -168,7 +169,7 @@ Mục cuối của nhánh refresh là chỗ dễ vỡ nhất và không bắt đ
 
 ### 5.2. Thứ tự Provider
 
-`ToastProvider` phải bọc ngoài `AuthProvider` (AuthContext gọi `useToast`). Đổi thứ tự thì
+`ToastProvider` phải bọc ngoài `AuthProvider` (SessionProvider gọi `useToast`). Đổi thứ tự thì
 **build vẫn pass** nhưng app crash lúc runtime.
 
 ### 5.3. Migration

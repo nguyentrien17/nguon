@@ -3,9 +3,11 @@ const moduleModel = require('#features/modules/moduleModel');
 const actionModel = require('#features/actions/actionModel');
 const userModel = require('#features/users/userModel');
 const auditLogModel = require('#features/audit-logs/auditLogModel');
+const db = require('#core/database/db');
 const AppError = require('#core/errors/AppError');
 const { buildFieldDiff } = require('#core/utils/auditDiff');
 const { buildPermissionDiff } = require('./permissionDiff');
+const { assertCanManageProtectedRole, assertKeepsActiveAdmin } = require('./adminGuard');
 const { AUDIT_STATUS, AUDIT_ACTION, PROTECTED_ROLE_CODE, ACTION_CODE, ERROR_CODE } = require('#shared');
 
 function isDuplicateEntry(err) {
@@ -27,7 +29,8 @@ function applyImpliedViewGrants(details, actions) {
 
     const result = [...details];
     byModule.forEach((codes, moduleId) => {
-        const needsView = codes.includes(ACTION_CODE.EDIT) || codes.includes(ACTION_CODE.DELETE);
+        // Thao tác ghi nào cũng cần thấy được danh sách: edit / delete / lock kéo theo view.
+        const needsView = [ACTION_CODE.EDIT, ACTION_CODE.DELETE, ACTION_CODE.LOCK].some((c) => codes.includes(c));
         if (!needsView) return;
         const viewAction = actions.find((a) => a.module_id === moduleId && a.action_code === ACTION_CODE.VIEW);
         if (viewAction && !grantedKeys.has(`${moduleId}_${viewAction.id}`)) {
@@ -155,6 +158,9 @@ async function assignRoleToUser({ permissionId, userId, actorId, ip }) {
     if (!targetUser) {
         throw new AppError(404, ERROR_CODE.NOT_FOUND, 'User not found');
     }
+    if (role.permission_code === PROTECTED_ROLE_CODE) {
+        await assertCanManageProtectedRole(actorId);
+    }
 
     await permissionModel.assignRoleToUser({ userId, permissionId });
     await auditLogModel.create({
@@ -178,11 +184,20 @@ async function unassignRoleFromUser({ permissionId, userId, actorId, ip }) {
     if (!targetUser) {
         throw new AppError(404, ERROR_CODE.NOT_FOUND, 'User not found');
     }
-    if (role.permission_code === PROTECTED_ROLE_CODE && Number(userId) === Number(actorId)) {
-        throw new AppError(403, ERROR_CODE.PROTECTED_ROLE, 'You cannot remove your own Administrator role');
+    if (role.permission_code === PROTECTED_ROLE_CODE) {
+        if (Number(userId) === Number(actorId)) {
+            throw new AppError(403, ERROR_CODE.PROTECTED_ROLE, 'You cannot remove your own Administrator role');
+        }
+        await assertCanManageProtectedRole(actorId);
+        // Gỡ role admin cũng là một cách làm mất admin cuối cùng (A và B gỡ của nhau cùng lúc) —
+        // kiểm tra + gỡ trong cùng transaction có khoá dòng, xem adminGuard.
+        await db.transaction(async (trx) => {
+            await assertKeepsActiveAdmin(userId, trx);
+            await permissionModel.unassignRoleFromUser({ userId, permissionId }, trx);
+        });
+    } else {
+        await permissionModel.unassignRoleFromUser({ userId, permissionId });
     }
-
-    await permissionModel.unassignRoleFromUser({ userId, permissionId });
     await auditLogModel.create({
         userId: actorId,
         action: AUDIT_ACTION.ROLE_UNASSIGN,

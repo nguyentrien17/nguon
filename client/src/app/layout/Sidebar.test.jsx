@@ -5,7 +5,8 @@ import { canOpenModule } from '@/core/permissions/moduleAccess';
 import Sidebar from './Sidebar';
 
 const auth = vi.hoisted(() => ({ value: {} }));
-vi.mock('@/core/auth/AuthContext', () => ({ useAuth: () => auth.value }));
+vi.mock('@/core/permissions/PermissionsContext', () => ({ usePermissions: () => auth.value }));
+vi.mock('@/core/permissions/ModulesContext', () => ({ useModules: () => auth.value }));
 
 const modules = [
     { id: 1, module_code: 'MOD_DASHBOARD', module_name: 'Tổng quan', module_href: '/dashboard', module_type: 1, module_parent_id: null },

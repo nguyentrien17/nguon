@@ -19,6 +19,7 @@ const { setSessionGuard } = require('#core/security/authenticate');
 const { isSessionActive } = require('#features/auth/authService');
 const { DEFAULT_SERVER_PORT, API_PREFIX, ERROR_CODE } = require('#shared');
 const { translate } = require('#core/errors/errorMessages');
+const { UPLOAD_PUBLIC_PREFIX } = require('#core/storage/fileStorage');
 
 // Core không import Feature, nên bootstrap là nơi nối hai bên: authenticate (Core) hỏi feature
 // auth xem user của access token còn được phép dùng phiên không (chưa bị khoá/xoá).
@@ -64,6 +65,24 @@ app.get('/health/ready', async (req, res) => {
         res.status(503).json({ status: 'error', db: 'unavailable' });
     }
 });
+
+// File người dùng tải lên (ảnh đại diện...) — xem core/storage/fileStorage.js.
+// - Cross-Origin-Resource-Policy: helmet mặc định 'same-origin' sẽ chặn client (origin khác,
+//   vd :5173) hiển thị ảnh; file ở đây là công khai nên cho phép cross-origin.
+// - CSP 'none' + nosniff (helmet): trình duyệt không chạy được gì từ file tải lên, kể cả khi ai
+//   đó lách được kiểm tra loại file.
+app.use(
+    UPLOAD_PUBLIC_PREFIX,
+    express.static(env.UPLOAD_DIR, {
+        index: false,
+        dotfiles: 'deny',
+        maxAge: '7d',
+        setHeaders: (res) => {
+            res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+            res.setHeader('Content-Security-Policy', "default-src 'none'");
+        },
+    })
+);
 
 // Routes
 app.use(API_PREFIX, apiLimiter, routes);

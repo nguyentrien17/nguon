@@ -138,8 +138,23 @@ async function assignRoleToUser({ userId, permissionId }, trx) {
     await (trx || db).raw('INSERT IGNORE INTO user_permissions (user_id, permission_id) VALUES (?, ?)', [userId, permissionId]);
 }
 
-async function unassignRoleFromUser({ userId, permissionId }) {
-    return db('user_permissions').where({ user_id: userId, permission_id: permissionId }).del();
+async function unassignRoleFromUser({ userId, permissionId }, trx) {
+    return (trx || db)('user_permissions').where({ user_id: userId, permission_id: permissionId }).del();
+}
+
+// Id các user ĐANG HOẠT ĐỘNG giữ role `protectedRoleCode`, khoá các dòng liên quan (FOR UPDATE)
+// trong transaction của caller. Hai thao tác song song (A khoá B trong khi B khoá A, hoặc gỡ role
+// admin của nhau) sẽ xếp hàng ở đây: thao tác sau đọc lại thấy kết quả của thao tác trước, nên
+// không thể cùng lọt qua kiểm tra "còn ít nhất một admin" rồi để hệ thống không còn admin nào.
+async function lockActiveProtectedUserIds(protectedRoleCode, activeStatus, trx) {
+    const rows = await trx('users as u')
+        .join('user_permissions as up', 'up.user_id', 'u.id')
+        .join('permissions as p', 'p.id', 'up.permission_id')
+        .where('p.permission_code', protectedRoleCode)
+        .andWhere('u.status', activeStatus)
+        .forUpdate()
+        .select('u.id');
+    return rows.map((r) => Number(r.id));
 }
 
 async function getRolesForUser(userId) {
@@ -164,5 +179,6 @@ module.exports = {
     deleteRole,
     assignRoleToUser,
     unassignRoleFromUser,
+    lockActiveProtectedUserIds,
     getRolesForUser,
 };

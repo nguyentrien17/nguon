@@ -2,6 +2,7 @@
 //   import { Button, DataTable, Pagination } from '@/components/ui';
 // Xem docs/ui-components.md để biết khi nào dùng component nào.
 export { default as Alert } from './Alert';
+export { default as Avatar } from './Avatar';
 export { default as Badge } from './Badge';
 export { default as Button } from './Button';
 export { default as ConfirmDialog } from './ConfirmDialog';

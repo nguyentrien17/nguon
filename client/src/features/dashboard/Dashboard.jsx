@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Users, ShieldCheck, LayoutGrid, Activity } from 'lucide-react';
-import { useAuth } from '@/core/auth/AuthContext';
+import { useSession } from '@/core/auth/SessionContext';
+import { usePermissions } from '@/core/permissions/PermissionsContext';
 import StatCard from './StatCard';
 import { MODULE_CODE, ACTION_CODE } from '@shared/constants.json';
 import { countModules, countRoles, countUsers } from './dashboardApi';
@@ -11,7 +12,8 @@ const orNull = (promise) => promise.catch(() => null);
 
 export default function Dashboard() {
     const { t } = useTranslation();
-    const { user, can } = useAuth();
+    const { user } = useSession();
+    const { can } = usePermissions();
     const [stats, setStats] = useState({ users: null, roles: null, modules: null });
 
     useEffect(() => {

@@ -1,9 +1,19 @@
 import axios from 'axios';
 import { DEFAULT_SERVER_PORT, API_PREFIX, ERROR_CODE } from '@shared/constants.json';
 import i18n from '@/i18n';
-import { signPayload } from './requestSigning';
+import { signableBody, signPayload } from './requestSigning';
 
 const BASE_URL = import.meta.env.VITE_API_URL || `http://localhost:${DEFAULT_SERVER_PORT}${API_PREFIX}`;
+
+/**
+ * URL tuyệt đối cho file server phục vụ tĩnh (vd ảnh đại diện '/uploads/avatars/x.png'). File
+ * nằm ở gốc server, không dưới API_PREFIX — nên lấy origin của BASE_URL.
+ */
+export function assetUrl(path) {
+    if (!path) return null;
+    if (/^https?:\/\//i.test(path)) return path;
+    return `${new URL(BASE_URL, window.location.origin).origin}${path}`;
+}
 const SIGNED_METHODS = ['post', 'put', 'delete', 'patch'];
 
 let accessToken = null;
@@ -45,7 +55,8 @@ axiosClient.interceptors.request.use(async (config) => {
     const method = (config.method || 'get').toLowerCase();
     const isUnsigned = UNSIGNED_URLS.some((u) => config.url?.includes(u));
     if (signingKey && SIGNED_METHODS.includes(method) && !isUnsigned) {
-        const raw = config.data !== undefined ? JSON.stringify(config.data) : '';
+        // JSON: ký trên chuỗi JSON; FormData (upload): ký trên chuỗi chuẩn hoá có SHA-256 từng file.
+        const raw = await signableBody(config.data);
         const timestamp = Date.now().toString();
         config.headers['X-Signature-Timestamp'] = timestamp;
         config.headers['X-Signature'] = await signPayload(signingKey, timestamp, raw);

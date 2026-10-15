@@ -16,8 +16,8 @@ export const createUser = (payload) => axiosClient.post('/users', payload).then(
 /** payload: { email?, full_name?, avatar?, password? } — password undefined = giữ nguyên */
 export const updateUser = (id, payload) => axiosClient.put(`/users/${id}`, payload).then((res) => res.data);
 
-/** DELETE thực chất là khoá/mở khoá (xem docs/api-conventions.md). Trả { data: { id, status } } */
-export const toggleUserStatus = (id) => axiosClient.delete(`/users/${id}`).then((res) => res.data);
+/** Đặt trạng thái: status = USER_STATUS.LOCKED (0) | ACTIVE (1). Trả { data: { id, status } }. Cần MOD_USER:lock. */
+export const setUserStatus = (id, status) => axiosClient.patch(`/users/${id}/status`, { status }).then((res) => res.data);
 
 /** File .xlsx dạng Blob, theo cùng bộ lọc với danh sách. */
 export const exportUsers = (params) => axiosClient.get('/users/export', { params, responseType: 'blob' }).then((res) => res.data);

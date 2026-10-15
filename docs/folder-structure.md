@@ -43,7 +43,10 @@ server/
 │   ├── http/
 │   │   ├── asyncHandler.js   bọc controller async → đẩy lỗi về errorHandler
 │   │   ├── validate.js       validateBody(zodSchema)
-│   │   └── locale.js         đọc header X-Locale → req.locale
+│   │   ├── locale.js         đọc header X-Locale → req.locale
+│   │   └── upload.js         singleFileUpload (multer, giới hạn dung lượng, loại file theo magic bytes)
+│   ├── storage/
+│   │   └── fileStorage.js    saveUpload / removeUpload dưới UPLOAD_DIR (phục vụ ở /uploads)
 │   ├── security/
 │   │   ├── authenticate.js   verify access token → req.user  (AUTHENTICATION) + setSessionGuard
 │   │   ├── jwt.js            sign/verify access + refresh token
@@ -65,7 +68,8 @@ server/
 │   ├── permissions/              roles + gán role
 │   │   ├── permissionRoutes.js  ...Controller  ...Service  ...Model  ...Validators
 │   │   ├── permissionMiddleware.js  requirePermission/requireAnyPermission  (AUTHORIZATION)
-│   │   └── permissionDiff.js        buildPermissionDiff (trước ở utils/auditDiff.js)
+│   │   ├── permissionDiff.js        buildPermissionDiff (trước ở utils/auditDiff.js)
+│   │   └── adminGuard.js            luôn còn ≥ 1 admin hoạt động; chỉ admin gán/gỡ ROLE_ADMIN
 │   ├── modules/
 │   ├── actions/
 │   │   └── actionRateLimiter.js  rate limit theo actions.rate_limit_per_minute
@@ -75,7 +79,7 @@ server/
 ├── routes/index.js           mount 7 feature router dưới API_PREFIX
 ├── database/
 │   ├── schema.sql  seed.sql
-│   ├── migrations/           001..010_*.sql, chạy theo thứ tự tên file
+│   ├── migrations/           001..010, 012_*.sql, chạy theo thứ tự tên file (011 còn ở pending/)
 │   │   └── pending/          migration đã viết nhưng CHƯA áp dụng (migrate.js không đọc thư mục con)
 │   └── migrate.js            runner tự viết, tracking ở bảng schema_migrations
 ├── eslint.config.js          ESLint (npm run lint), gồm luật Core không import Features
@@ -141,9 +145,11 @@ client/src/
 │   ├── api/
 │   │   ├── axiosClient.js    axios instance + interceptor refresh token + ký request
 │   │   └── requestSigning.js HMAC phía client (phải khớp core/security/verifySignature.js)
-│   ├── auth/AuthContext.jsx  session, login/logout, can(), canAccessModule()
+│   ├── auth/                 SessionContext.jsx (useSession: user, login/logout, khôi phục
+│   │                         phiên), AuthContext.jsx (AuthProvider = ghép 3 provider)
 │   ├── permissions/          ProtectedRoute.jsx, ActionGuard.jsx, moduleAccess.js (quy tắc
-│   │                         "mở được module" dùng chung cho Sidebar + ProtectedRoute)
+│   │                         "mở được module" dùng chung cho Sidebar + ProtectedRoute),
+│   │                         PermissionsContext.jsx (usePermissions), ModulesContext.jsx (useModules)
 │   └── errors/               errorMessage.js (dịch mã lỗi từ shared/errorMessages.json),
 │                             zodErrorMessage.js, ErrorBoundary.jsx (gốc + quanh từng trang)
 │
@@ -193,7 +199,7 @@ Alias: `@` → `client/src`, `@shared` → `shared/` (khai cả ở `vite.config
 
 Hai thứ cần giữ đúng thứ tự, nếu đổi sẽ vỡ lúc runtime mà build vẫn pass:
 
-1. **`ToastProvider` phải bọc ngoài `AuthProvider`** — `AuthContext` gọi `useToast()` để báo
+1. **`ToastProvider` phải bọc ngoài `AuthProvider`** — `SessionProvider` gọi `useToast()` để báo
    phiên hết hạn.
 2. **`core/api/requestSigning.js` phải khớp thuật toán với `server/core/security/verifySignature.js`**
    (HMAC-SHA256 trên `"${timestamp}.${rawBody}"`), và danh sách `UNSIGNED_URLS` trong
@@ -206,8 +212,8 @@ Xếp theo thứ tự nên làm:
 1. **Kiểm chứng UI bằng tay.** Cấu trúc frontend đã chuyển và `npm run lint`, `npm run build`,
    Vite dev server đều pass, nhưng **chưa ai bấm thử giao diện** sau khi di chuyển. Cần đăng
    nhập, vào từng trang, thử đổi mật khẩu và để phiên hết hạn một lần.
-2. **Tách `AuthContext`** — hiện gánh cả session, permissions và danh sách modules. Kế hoạch
-   refactor (mục 11) khuyên tách, nhưng việc này đổi hành vi render nên để thành đợt riêng.
+2. ~~**Tách `AuthContext`**~~ — đã xong: `useSession` / `usePermissions` / `useModules`
+   (xem coding-conventions.md mục 4).
 3. ~~**Đồng bộ zod**~~ — đã xong: root/client/server cùng `4.6.1`.
 4. **Gom `features/rbac/`** (backend) — đưa `permissions/`, `modules/`, `actions/` vào một
    thư mục. Đã hoãn có chủ ý: nó sửa `#features/permissions/*` ở 8 file mà không giúp gì cho
@@ -217,5 +223,6 @@ Xếp theo thứ tự nên làm:
    Node ≥ 20.19 / 22.12. Nhờ vậy vitest nạp được mọi trang/form của client.
 6. ~~**Các tài liệu còn thiếu**~~ — đã có đủ 9 file trong `docs/` theo mục 5 của kế hoạch.
 7. **CI, Dockerfile** — chưa có (ESLint server và unit test đã có); xem [testing.md](testing.md) mục 6.
-8. **`.gitattributes`** — repo chưa chuẩn hoá line ending (git cảnh báo LF→CRLF trên hầu hết
-   file). Thêm `* text=auto eol=lf` sẽ renormalize toàn bộ repo, nên làm thành một commit riêng.
+8. ~~**`.gitattributes`**~~ — đã thêm: `* text=auto eol=lf` + danh sách file nhị phân. Mọi file
+   trong repo vốn đã là LF nên không phải renormalize; cảnh báo "LF will be replaced by CRLF"
+   (do `core.autocrlf=true` trên máy Windows) đã hết.

@@ -12,7 +12,9 @@ const permissionModel = require('#features/permissions/permissionModel');
 const refreshTokenModel = require('#features/auth/refreshTokenModel');
 const auditLogModel = require('#features/audit-logs/auditLogModel');
 const userService = require('#features/users/userService');
+const permissionService = require('#features/permissions/permissionService');
 const authService = require('#features/auth/authService');
+const db = require('#core/database/db');
 const { requirePermission, requireAnyPermission } = require('#features/permissions/permissionMiddleware');
 const AppError = require('#core/errors/AppError');
 const { USER_STATUS } = require('#shared');
@@ -86,20 +88,34 @@ describe('permissionMiddleware', () => {
     });
 });
 
-describe('userService.toggleUserStatus', () => {
+// Transaction giả: chạy callback với một trx giả — đủ để test logic quanh transaction mà không
+// cần DB. Danh sách "admin đang hoạt động" (đọc có khoá dòng) được mock theo từng test.
+const FAKE_TRX = Symbol('trx');
+function mockTransaction() {
+    mock.method(db, 'transaction', async (fn) => fn(FAKE_TRX));
+}
+function mockActiveAdmins(ids) {
+    return mock.method(permissionModel, 'lockActiveProtectedUserIds', async () => ids);
+}
+
+describe('userService.setUserStatus', () => {
+    const LOCK = USER_STATUS.LOCKED;
+    const ACTIVE = USER_STATUS.ACTIVE;
     let setStatus;
     let revokeAll;
     beforeEach(() => {
         setStatus = mock.method(userModel, 'setStatus', async () => 1);
         revokeAll = mock.method(refreshTokenModel, 'revokeAllForUser', async () => {});
+        mockTransaction();
+        mockActiveAdmins([ADMIN_ID]);
     });
 
     const withUser = (user) => mock.method(userModel, 'findById', async () => user);
 
     test('actor thường khoá Administrator -> 403 ERR_PROTECTED_ROLE (lock), không ghi gì', async () => {
         mockAccess();
-        withUser({ id: ADMIN_ID, username: 'superadmin', status: USER_STATUS.ACTIVE });
-        await rejectsWith(userService.toggleUserStatus(ADMIN_ID, { actorId: ACTOR_ID }), {
+        withUser({ id: ADMIN_ID, username: 'superadmin', status: ACTIVE });
+        await rejectsWith(userService.setUserStatus(ADMIN_ID, { status: LOCK, actorId: ACTOR_ID }), {
             statusCode: 403,
             errorCode: 'ERR_PROTECTED_ROLE',
             actionKey: 'lock',
@@ -109,25 +125,38 @@ describe('userService.toggleUserStatus', () => {
 
     test('actor thường MỞ khoá Administrator cũng bị chặn', async () => {
         mockAccess();
-        withUser({ id: ADMIN_ID, username: 'superadmin', status: USER_STATUS.LOCKED });
-        await rejectsWith(userService.toggleUserStatus(ADMIN_ID, { actorId: ACTOR_ID }), {
+        withUser({ id: ADMIN_ID, username: 'superadmin', status: LOCK });
+        await rejectsWith(userService.setUserStatus(ADMIN_ID, { status: ACTIVE, actorId: ACTOR_ID }), {
             statusCode: 403,
             errorCode: 'ERR_PROTECTED_ROLE',
         });
     });
 
-    test('Administrator khoá Administrator khác -> được phép (docs/security.md 10.2)', async () => {
+    test('Administrator khoá Administrator khác khi còn admin hoạt động -> được phép, ghi trong transaction', async () => {
         adminIds.add(2);
         mockAccess();
-        withUser({ id: 2, username: 'admin2', status: USER_STATUS.ACTIVE });
-        const result = await userService.toggleUserStatus(2, { actorId: ADMIN_ID });
-        assert.equal(result.status, USER_STATUS.LOCKED);
+        mockActiveAdmins([ADMIN_ID, 2]);
+        withUser({ id: 2, username: 'admin2', status: ACTIVE });
+        const result = await userService.setUserStatus(2, { status: LOCK, actorId: ADMIN_ID });
+        assert.equal(result.status, LOCK);
+        assert.deepEqual(setStatus.mock.calls[0].arguments, [2, LOCK, FAKE_TRX]);
+    });
+
+    test('khoá admin hoạt động CUỐI CÙNG -> 409 ERR_LAST_ADMIN, không ghi gì (vd A và B khoá nhau cùng lúc)', async () => {
+        adminIds.add(2);
+        mockAccess();
+        // Kịch bản race: transaction kia đã khoá ADMIN_ID; khi tới lượt, chỉ còn admin 2 hoạt động.
+        mockActiveAdmins([2]);
+        withUser({ id: 2, username: 'admin2', status: ACTIVE });
+        await rejectsWith(userService.setUserStatus(2, { status: LOCK, actorId: ADMIN_ID }), { statusCode: 409, errorCode: 'ERR_LAST_ADMIN' });
+        assert.equal(setStatus.mock.callCount(), 0);
+        assert.equal(revokeAll.mock.callCount(), 0);
     });
 
     test('tự khoá chính mình -> 403 ERR_SELF_LOCK', async () => {
         mockAccess();
-        withUser({ id: ACTOR_ID, username: 'me', status: USER_STATUS.ACTIVE });
-        await rejectsWith(userService.toggleUserStatus(ACTOR_ID, { actorId: ACTOR_ID }), {
+        withUser({ id: ACTOR_ID, username: 'me', status: ACTIVE });
+        await rejectsWith(userService.setUserStatus(ACTOR_ID, { status: LOCK, actorId: ACTOR_ID }), {
             statusCode: 403,
             errorCode: 'ERR_SELF_LOCK',
         });
@@ -135,26 +164,117 @@ describe('userService.toggleUserStatus', () => {
 
     test('khoá user thường -> đổi status VÀ revoke mọi refresh token', async () => {
         mockAccess();
-        withUser({ id: TARGET_ID, username: 'bob', status: USER_STATUS.ACTIVE });
-        const result = await userService.toggleUserStatus(TARGET_ID, { actorId: ACTOR_ID });
-        assert.deepEqual(result, { id: TARGET_ID, status: USER_STATUS.LOCKED });
-        assert.deepEqual(setStatus.mock.calls[0].arguments, [TARGET_ID, USER_STATUS.LOCKED]);
+        withUser({ id: TARGET_ID, username: 'bob', status: ACTIVE });
+        const result = await userService.setUserStatus(TARGET_ID, { status: LOCK, actorId: ACTOR_ID });
+        assert.deepEqual(result, { id: TARGET_ID, status: LOCK });
+        assert.deepEqual(setStatus.mock.calls[0].arguments.slice(0, 2), [TARGET_ID, LOCK]);
         assert.equal(revokeAll.mock.callCount(), 1);
         assert.equal(revokeAll.mock.calls[0].arguments[0], TARGET_ID);
     });
 
     test('mở khoá user thường -> không cần revoke', async () => {
         mockAccess();
-        withUser({ id: TARGET_ID, username: 'bob', status: USER_STATUS.LOCKED });
-        const result = await userService.toggleUserStatus(TARGET_ID, { actorId: ACTOR_ID });
-        assert.equal(result.status, USER_STATUS.ACTIVE);
+        withUser({ id: TARGET_ID, username: 'bob', status: LOCK });
+        const result = await userService.setUserStatus(TARGET_ID, { status: ACTIVE, actorId: ACTOR_ID });
+        assert.equal(result.status, ACTIVE);
         assert.equal(revokeAll.mock.callCount(), 0);
+    });
+
+    test('đặt đúng trạng thái đang có -> không ghi, không audit (gửi lại không đảo trạng thái)', async () => {
+        mockAccess();
+        withUser({ id: TARGET_ID, username: 'bob', status: LOCK });
+        const result = await userService.setUserStatus(TARGET_ID, { status: LOCK, actorId: ACTOR_ID });
+        assert.equal(result.status, LOCK);
+        assert.equal(setStatus.mock.callCount(), 0);
+        assert.equal(auditLogModel.create.mock.callCount(), 0);
     });
 
     test('user không tồn tại -> 404', async () => {
         mockAccess();
         withUser(null);
-        await rejectsWith(userService.toggleUserStatus(999, { actorId: ACTOR_ID }), { statusCode: 404, errorCode: 'ERR_NOT_FOUND' });
+        await rejectsWith(userService.setUserStatus(999, { status: LOCK, actorId: ACTOR_ID }), { statusCode: 404, errorCode: 'ERR_NOT_FOUND' });
+    });
+});
+
+describe('permissionService — gán / gỡ role Administrator', () => {
+    const ADMIN_ROLE = { id: 100, permission_code: 'ROLE_ADMIN', permission_name: 'Administrator' };
+    const STAFF_ROLE = { id: 200, permission_code: 'ROLE_STAFF', permission_name: 'Staff' };
+    let assign;
+    let unassign;
+    beforeEach(() => {
+        mockTransaction();
+        mockActiveAdmins([ADMIN_ID, 2]);
+        mock.method(userModel, 'findById', async (id) => ({ id: Number(id), username: `u${id}` }));
+        assign = mock.method(permissionModel, 'assignRoleToUser', async () => {});
+        unassign = mock.method(permissionModel, 'unassignRoleFromUser', async () => 1);
+    });
+    const withRole = (role) => mock.method(permissionModel, 'findRoleById', async () => role);
+
+    test('KHÔNG phải admin tự gán ROLE_ADMIN cho mình -> 403 (chặn leo quyền)', async () => {
+        mockAccess();
+        withRole(ADMIN_ROLE);
+        await rejectsWith(permissionService.assignRoleToUser({ permissionId: 100, userId: ACTOR_ID, actorId: ACTOR_ID }), {
+            statusCode: 403,
+            errorCode: 'ERR_PROTECTED_ROLE',
+            actionKey: 'assign',
+        });
+        assert.equal(assign.mock.callCount(), 0);
+    });
+
+    test('không phải admin gán role THƯỜNG -> vẫn được (guard không chặn quá rộng)', async () => {
+        mockAccess();
+        withRole(STAFF_ROLE);
+        await permissionService.assignRoleToUser({ permissionId: 200, userId: TARGET_ID, actorId: ACTOR_ID });
+        assert.equal(assign.mock.callCount(), 1);
+    });
+
+    test('admin gán ROLE_ADMIN -> được', async () => {
+        mockAccess();
+        withRole(ADMIN_ROLE);
+        await permissionService.assignRoleToUser({ permissionId: 100, userId: TARGET_ID, actorId: ADMIN_ID });
+        assert.equal(assign.mock.callCount(), 1);
+    });
+
+    test('KHÔNG phải admin gỡ ROLE_ADMIN của admin khác -> 403', async () => {
+        mockAccess();
+        withRole(ADMIN_ROLE);
+        await rejectsWith(permissionService.unassignRoleFromUser({ permissionId: 100, userId: ADMIN_ID, actorId: ACTOR_ID }), {
+            statusCode: 403,
+            errorCode: 'ERR_PROTECTED_ROLE',
+        });
+        assert.equal(unassign.mock.callCount(), 0);
+    });
+
+    test('admin gỡ ROLE_ADMIN của admin khác khi còn admin -> được, trong transaction', async () => {
+        adminIds.add(2);
+        mockAccess();
+        withRole(ADMIN_ROLE);
+        await permissionService.unassignRoleFromUser({ permissionId: 100, userId: 2, actorId: ADMIN_ID });
+        assert.equal(unassign.mock.calls[0].arguments[1], FAKE_TRX);
+    });
+
+    test('gỡ ROLE_ADMIN của admin hoạt động cuối cùng -> 409 ERR_LAST_ADMIN', async () => {
+        adminIds.add(2);
+        mockAccess();
+        mockActiveAdmins([2]); // race: actor vừa bị gỡ admin ở transaction khác
+        withRole(ADMIN_ROLE);
+        await rejectsWith(permissionService.unassignRoleFromUser({ permissionId: 100, userId: 2, actorId: ADMIN_ID }), {
+            statusCode: 409,
+            errorCode: 'ERR_LAST_ADMIN',
+        });
+        assert.equal(unassign.mock.callCount(), 0);
+    });
+
+    test('createUser kèm ROLE_ADMIN bởi người không phải admin -> 403, không tạo user', async () => {
+        const ACTOR_PERMS = { [ACTOR_ID]: [{ module_code: 'MOD_PERMISSION', action_code: 'edit' }] };
+        mockAccess(ACTOR_PERMS);
+        withRole(ADMIN_ROLE);
+        const create = mock.method(userModel, 'create', async () => 99);
+        await rejectsWith(
+            userService.createUser({ username: 'x', email: 'x@y.z', password: 'Passw0rd1', full_name: 'X', role_ids: [100], actorId: ACTOR_ID }),
+            { statusCode: 403, errorCode: 'ERR_PROTECTED_ROLE', actionKey: 'assign' }
+        );
+        assert.equal(create.mock.callCount(), 0);
     });
 });
 

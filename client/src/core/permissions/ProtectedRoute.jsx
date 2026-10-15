@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useAuth } from '@/core/auth/AuthContext';
+import { useSession } from '@/core/auth/SessionContext';
+import { usePermissions } from './PermissionsContext';
 import Spinner from '@/components/ui/Spinner';
 
 /**
@@ -8,7 +9,8 @@ import Spinner from '@/components/ui/Spinner';
  * backend kiểm tra ở mọi request.
  */
 export default function ProtectedRoute({ moduleCode }) {
-    const { isAuthenticated, loading, canOpenModule } = useAuth();
+    const { isAuthenticated, loading } = useSession();
+    const { canOpenModule } = usePermissions();
     const location = useLocation();
 
     // Đang khôi phục phiên từ refresh cookie (F5): hiện spinner thay vì màn hình trắng.

@@ -6,12 +6,12 @@ import { Badge, Button, ConfirmDialog, DataTable, IconButton, Pagination, Search
 import usePagedList from '@/hooks/usePagedList';
 import { downloadFile } from '@/lib/downloadFile';
 import { useToast } from '@/app/providers/ToastContext';
-import { useAuth } from '@/core/auth/AuthContext';
+import { useSession } from '@/core/auth/SessionContext';
 import { MODULE_CODE, ACTION_CODE, USER_STATUS } from '@shared/constants.json';
 import { getErrorMessage } from '@/core/errors/errorMessage';
 import UserFormModal from './UserFormModal';
 import UserRolesModal from './UserRolesModal';
-import { exportUsers, listUsers, toggleUserStatus } from './userApi';
+import { exportUsers, listUsers, setUserStatus } from './userApi';
 
 function initials(name = '') {
     return name
@@ -27,7 +27,7 @@ function initials(name = '') {
 export default function Users() {
     const { t } = useTranslation();
     const toast = useToast();
-    const { user: currentUser } = useAuth();
+    const { user: currentUser } = useSession();
     const list = usePagedList(listUsers, { limit: 10, initialFilters: { search: '' } });
     const [search, setSearch] = useState('');
     // undefined = form đóng, null = tạo mới, object = đang sửa user đó.
@@ -54,7 +54,8 @@ export default function Users() {
         const user = confirmUser;
         setToggling(true);
         try {
-            await toggleUserStatus(user.id);
+            // Gửi trạng thái ĐÍCH (không phải "đảo"): bấm 2 lần / retry không mở khoá lại.
+            await setUserStatus(user.id, user.status === USER_STATUS.ACTIVE ? USER_STATUS.LOCKED : USER_STATUS.ACTIVE);
             toast.success(user.status === USER_STATUS.ACTIVE ? t('users.lockedToast') : t('users.unlockedToast'));
             list.reload();
         } catch (err) {
@@ -100,7 +101,7 @@ export default function Users() {
                         <IconButton icon={Pencil} label={t('users.edit')} onClick={() => setEditing(u)} />
                     </ActionGuard>
                     {u.id !== currentUser?.id && (
-                        <ActionGuard module={MODULE_CODE.USER} action={ACTION_CODE.DELETE}>
+                        <ActionGuard module={MODULE_CODE.USER} action={ACTION_CODE.LOCK}>
                             <IconButton
                                 icon={u.status === USER_STATUS.ACTIVE ? Lock : Unlock}
                                 label={u.status === USER_STATUS.ACTIVE ? t('users.lock') : t('users.unlock')}

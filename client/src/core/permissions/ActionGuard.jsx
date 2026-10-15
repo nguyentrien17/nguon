@@ -1,4 +1,5 @@
-import { useAuth } from '@/core/auth/AuthContext';
+import { usePermissions } from './PermissionsContext';
+import { useModules } from './ModulesContext';
 
 /**
  * Ẩn/khóa các nút thao tác (create/edit/delete/export...) dựa trên quyền của user hiện tại.
@@ -7,7 +8,8 @@ import { useAuth } from '@/core/auth/AuthContext';
  * <ActionGuard elementId="btn-export-excel" action={ACTION_CODE.EXPORT_EXCEL}><button>...</button></ActionGuard>
  */
 export default function ActionGuard({ module, action, elementId, children }) {
-    const { can, getModuleByElementId } = useAuth();
+    const { can } = usePermissions();
+    const { getModuleByElementId } = useModules();
     const moduleCode = elementId ? getModuleByElementId(elementId)?.module_code : module;
     if (!moduleCode || !can(moduleCode, action)) return null;
     return children;

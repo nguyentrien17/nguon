@@ -100,8 +100,8 @@ async function main() {
     const bcrypt = require('bcryptjs');
     const hash = await bcrypt.hash(TMP_PASSWORD, 12);
 
-    // 1. Role tạm chỉ có MOD_USER:view/edit/delete — KHÔNG phải protected role.
-    //    delete = khoá/mở khoá tài khoản (DELETE /users/:id), dùng ở bước 13.
+    // 1. Role tạm chỉ có MOD_USER:view/edit/delete — KHÔNG phải protected role. CHƯA có
+    //    MOD_USER:lock: bước 13 kiểm tra quyền "xoá" không còn khoá được tài khoản, rồi mới cấp lock.
     const [roleId] = await db('permissions').insert({
         permission_code: TMP_ROLE_CODE,
         permission_name: 'Sec test temporary role',
@@ -294,8 +294,26 @@ async function main() {
     const orphan = await db('users').where({ username: 'sectest_rollback' }).first();
     check('không có user mồ côi nào được tạo', !orphan, orphan ? `đã tạo id ${orphan.id}` : '');
 
-    // 13. attacker có MOD_USER:delete nhưng KHÔNG được khoá tài khoản Administrator.
-    const lockAdmin = await signedRequest('DELETE', '/users/1', accessToken, signingKey);
+    // 13a. Khoá / mở khoá đã tách khỏi quyền "xoá": có MOD_USER:delete mà không có MOD_USER:lock
+    //      thì không khoá được ai; endpoint DELETE /users/:id cũ không còn.
+    const lockWithDeleteOnly = await signedRequest('PATCH', `/users/${victimId}/status`, accessToken, signingKey, { status: 0 });
+    check(
+        'chỉ có MOD_USER:delete -> PATCH /users/:id/status bị 403 ERR_PERMISSION_DENIED',
+        lockWithDeleteOnly.status === 403 && lockWithDeleteOnly.body.errorCode === 'ERR_PERMISSION_DENIED',
+        `${lockWithDeleteOnly.status} ${JSON.stringify(lockWithDeleteOnly.body)}`
+    );
+    const oldDelete = await signedRequest('DELETE', `/users/${victimId}`, accessToken, signingKey);
+    check('DELETE /users/:id cũ -> 404 (đã bỏ)', oldDelete.status === 404, `${oldDelete.status}`);
+
+    // 13b. Cấp MOD_USER:lock: khoá user thường được, nhưng KHÔNG được khoá tài khoản Administrator.
+    const lockAction = await db('actions as a')
+        .join('modules as m', 'm.id', 'a.module_id')
+        .where({ 'm.module_code': MODULE_CODE.USER, 'a.action_code': ACTION_CODE.LOCK })
+        .first('a.id', 'a.module_id');
+    if (!lockAction) throw new Error('Không có action MOD_USER:lock — chạy `npm run migrate` (migration 012) trước.');
+    await db('permission_details').insert({ permission_id: roleId, module_id: lockAction.module_id, action_id: lockAction.id });
+
+    const lockAdmin = await signedRequest('PATCH', '/users/1/status', accessToken, signingKey, { status: 0 });
     check(
         'khoá tài khoản Administrator bằng actor thường -> 403 ERR_PROTECTED_ROLE',
         lockAdmin.status === 403 && lockAdmin.body.errorCode === 'ERR_PROTECTED_ROLE',
@@ -306,8 +324,10 @@ async function main() {
 
     // 14. Khoá user có hiệu lực NGAY: access token còn hạn bị từ chối, refresh token bị thu hồi.
     if (!victimLive) return;
-    const lockVictim = await signedRequest('DELETE', `/users/${victimId}`, adminSession.body.accessToken, adminSession.body.signingKey);
+    const lockVictim = await signedRequest('PATCH', `/users/${victimId}/status`, adminSession.body.accessToken, adminSession.body.signingKey, { status: 0 });
     check('admin khoá victim -> 200', lockVictim.status === 200, `${lockVictim.status} ${JSON.stringify(lockVictim.body)}`);
+    const lockAgain = await signedRequest('PATCH', `/users/${victimId}/status`, adminSession.body.accessToken, adminSession.body.signingKey, { status: 0 });
+    check('gửi lại "khoá" -> vẫn khoá (không đảo trạng thái như DELETE cũ)', lockAgain.status === 200 && lockAgain.body.data.status === 0, JSON.stringify(lockAgain.body));
 
     const meAfterLock = await fetch(`${BASE}/auth/me`, { headers: { Authorization: `Bearer ${victimLive.body.accessToken}` } });
     const meBody = await meAfterLock.json();

@@ -4,3 +4,5 @@ node_modules
 # Xem ghi chú ở .gitignore gốc — .env.example là template, không chứa secret thật.
 !.env.example
 *.log
+# File người dùng tải lên (UPLOAD_DIR mặc định) — dữ liệu, không phải mã nguồn.
+uploads/

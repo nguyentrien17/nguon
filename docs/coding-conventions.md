@@ -114,12 +114,21 @@ try {
 - Component một file, export default, tên file trùng tên component (`Users.jsx` → `Users`).
 - Context đi kèm một hook `useX()` throw khi dùng ngoài Provider:
   ```js
-  export function useAuth() {
-      const ctx = useContext(AuthContext);
-      if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  export function useSession() {
+      const ctx = useContext(SessionContext);
+      if (!ctx) throw new Error('useSession must be used within AuthProvider');
       return ctx;
   }
   ```
+- **Mỗi context một việc**, component dùng đúng hook mình cần:
+
+  | Hook | File | Cung cấp |
+  |---|---|---|
+  | `useSession()` | `core/auth/SessionContext.jsx` | `user`, `isAuthenticated`, `loading`, `login`, `logout`, `refreshProfile`, `syncPermissions` |
+  | `usePermissions()` | `core/permissions/PermissionsContext.jsx` | `permissions`, `can(module, action)`, `canOpenModule(module)` |
+  | `useModules()` | `core/permissions/ModulesContext.jsx` | `modules`, `getModuleByElementId(id)` |
+
+  `AuthProvider` (`core/auth/AuthContext.jsx`) chỉ ghép ba provider. Không còn `useAuth()`.
 - **Mọi import cắt qua ranh giới thư mục dùng `@/`.** Chỉ dùng `./` trong cùng thư mục.
 - Trang được lazy-load trong `app/router/AppRoutes.jsx` để chia chunk theo route. Thêm trang
   mới thì thêm vào đó theo đúng khuôn `lazy(() => import('@/features/.../X'))`.
@@ -165,7 +174,7 @@ features/users/
   (ô nhập có icon), không dùng `<Form>`.
 
 Hiện trạng: **mọi** component trong `features/` đã gọi API qua `<feature>Api.js` — chỉ còn
-`core/auth/AuthContext.jsx` và `core/api/axiosClient.js` (hạ tầng phiên) dùng `axiosClient`
+`core/auth/SessionContext.jsx`, `core/permissions/ModulesContext.jsx` và `core/api/axiosClient.js` (hạ tầng) dùng `axiosClient`
 trực tiếp.
 
 ## 5. Validation

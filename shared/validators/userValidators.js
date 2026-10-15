@@ -20,6 +20,11 @@ export const createUserSchema = z.object({
     role_ids: z.array(positiveId).optional().default([]),
 });
 
+// PATCH /users/:id/status — 0 = khoá, 1 = hoạt động (USER_STATUS trong shared/constants.json).
+export const userStatusSchema = z.object({
+    status: z.union([z.literal(0), z.literal(1)], 'validation.invalidFormat'),
+});
+
 // Cập nhật: email / full_name lấy từ createUserSchema (cùng quy tắc), tất cả tuỳ chọn.
 export const updateUserSchema = atLeastOneField(
     createUserSchema.pick({ email: true, full_name: true }).partial().extend({

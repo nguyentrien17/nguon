@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FormModal } from '@/components/form';
 import { useToast } from '@/app/providers/ToastContext';
-import { useAuth } from '@/core/auth/AuthContext';
+import { usePermissions } from '@/core/permissions/PermissionsContext';
 import { MODULE_CODE, ACTION_CODE } from '@shared/constants.json';
 import { createUserSchema, updateUserSchema } from '@shared/validators/userValidators';
 import { createUser, listRoles, updateUser } from './userApi';
@@ -18,7 +18,7 @@ import { createUser, listRoles, updateUser } from './userApi';
 export default function UserFormModal({ open, user, onClose, onSaved }) {
     const { t } = useTranslation();
     const toast = useToast();
-    const { can } = useAuth();
+    const { can } = usePermissions();
     const [roles, setRoles] = useState(null); // null = chưa tải
 
     const isEdit = !!user;

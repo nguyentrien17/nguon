@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Users, ShieldCheck, ScrollText, Boxes, Circle, ChevronRight, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/core/auth/AuthContext';
+import { usePermissions } from '@/core/permissions/PermissionsContext';
+import { useModules } from '@/core/permissions/ModulesContext';
 import { MODULE_CODE, MODULE_TYPE } from '@shared/constants.json';
 import { MODULE_ICON_MAP } from '@/constants/moduleIcons';
 
@@ -16,9 +17,10 @@ const ICONS = {
 
 export default function Sidebar({ open, onNavigate }) {
     const { t } = useTranslation();
-    // modules do AuthContext nạp sẵn mỗi khi có phiên mới — trước đây Sidebar tự gọi /modules
+    // modules do ModulesProvider nạp sẵn mỗi khi có phiên mới — trước đây Sidebar tự gọi /modules
     // lần thứ hai với cùng dữ liệu.
-    const { canOpenModule, modules } = useAuth();
+    const { canOpenModule } = usePermissions();
+    const { modules } = useModules();
     // Lưu nhóm đang THU GỌN (mặc định trống = mở hết) để không phải khởi tạo lại khi modules về.
     const [collapsed, setCollapsed] = useState(new Set());
 

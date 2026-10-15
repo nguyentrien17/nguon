@@ -21,6 +21,7 @@ const actions = [
     { id: 10, module_id: 1, action_code: 'view' },
     { id: 11, module_id: 1, action_code: 'edit' },
     { id: 12, module_id: 1, action_code: 'delete' },
+    { id: 13, module_id: 1, action_code: 'lock' },
     { id: 20, module_id: 2, action_code: 'view' },
     { id: 30, module_id: 3, action_code: 'export_excel' },
 ];
@@ -31,15 +32,16 @@ describe('createModuleTree', () => {
     it('gốc, con, action, và keysOf gồm cả module con', () => {
         expect(tree.roots.map((m) => m.id)).toEqual([1, 2]);
         expect(tree.childrenOf(1).map((m) => m.id)).toEqual([3]);
-        expect(tree.actionsOf(1)).toHaveLength(3);
-        expect(sorted(tree.keysOf(modules[0]))).toEqual(['1_10', '1_11', '1_12', '3_30']);
+        expect(tree.actionsOf(1)).toHaveLength(4);
+        expect(sorted(tree.keysOf(modules[0]))).toEqual(['1_10', '1_11', '1_12', '1_13', '3_30']);
     });
 });
 
 describe('chọn quyền', () => {
-    it('tick EDIT / DELETE tự tick VIEW của cùng module', () => {
+    it('tick EDIT / DELETE / LOCK tự tick VIEW của cùng module', () => {
         expect(sorted(toggleGrant(new Set(), tree, 1, 11))).toEqual(['1_10', '1_11']);
         expect(sorted(toggleGrant(new Set(), tree, 1, 12))).toEqual(['1_10', '1_12']);
+        expect(sorted(toggleGrant(new Set(), tree, 1, 13))).toEqual(['1_10', '1_13']);
     });
 
     it('bỏ tick EDIT không bỏ VIEW; action khác không kéo theo gì', () => {

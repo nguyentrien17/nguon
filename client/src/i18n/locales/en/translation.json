@@ -274,7 +274,14 @@
     "changePassword": "Change password",
     "updated": "Profile updated successfully",
     "passwordChanged": "Password changed successfully",
-    "passwordMismatch": "New password and confirmation do not match"
+    "passwordMismatch": "New password and confirmation do not match",
+    "avatarTitle": "Profile picture",
+    "chooseAvatar": "New picture",
+    "avatarHint": "PNG, JPEG or WebP, up to 2 MB",
+    "uploadAvatar": "Upload",
+    "removeAvatar": "Remove picture",
+    "avatarUpdated": "Profile picture updated",
+    "avatarRemoved": "Profile picture removed"
   },
   "validation": {
     "required": "{{field}} is required",

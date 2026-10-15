@@ -8,7 +8,7 @@ import * as api from './userApi';
 
 vi.mock('./userApi', () => ({ createUser: vi.fn(), updateUser: vi.fn(), listRoles: vi.fn() }));
 const auth = vi.hoisted(() => ({ canAssign: true }));
-vi.mock('@/core/auth/AuthContext', () => ({ useAuth: () => ({ can: () => auth.canAssign }) }));
+vi.mock('@/core/permissions/PermissionsContext', () => ({ usePermissions: () => ({ can: () => auth.canAssign }) }));
 
 const ROLES = [{ id: 7, permission_name: 'Nhân viên', permission_code: 'ROLE_STAFF' }];
 

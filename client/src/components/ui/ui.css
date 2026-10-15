@@ -208,6 +208,12 @@
   text-align: center;
 }
 
+/* ---------- Avatar ---------- */
+.avatar-img {
+  object-fit: cover;
+  padding: 0;
+}
+
 /* ---------- Toast ---------- */
 .toast-warning {
   background: #78350f;

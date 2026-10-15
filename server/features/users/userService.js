@@ -4,6 +4,7 @@ const permissionModel = require('#features/permissions/permissionModel');
 const auditLogModel = require('#features/audit-logs/auditLogModel');
 // Đổi password của một user phải thu hồi phiên đăng nhập của user đó — xem updateUser.
 const refreshTokenModel = require('#features/auth/refreshTokenModel');
+const { assertKeepsActiveAdmin, assertCanManageProtectedRole } = require('#features/permissions/adminGuard');
 const db = require('#core/database/db');
 const AppError = require('#core/errors/AppError');
 const { buildFieldDiff } = require('#core/utils/auditDiff');
@@ -53,6 +54,10 @@ async function createUser({ username, email, password, full_name, role_ids, acto
         roles = (await Promise.all(roleIds.map((roleId) => permissionModel.findRoleById(roleId)))).filter(Boolean);
         if (roles.length !== roleIds.length) {
             throw new AppError(404, ERROR_CODE.NOT_FOUND, 'One or more roles do not exist');
+        }
+        // MOD_PERMISSION:edit cho phép gán role thường, nhưng ROLE_ADMIN thì chỉ admin được gán.
+        if (roles.some((r) => r.permission_code === PROTECTED_ROLE_CODE)) {
+            await assertCanManageProtectedRole(actorId);
         }
     }
 
@@ -183,30 +188,42 @@ async function exportUsers({ search, actorId, ip }) {
     return rows;
 }
 
-async function toggleUserStatus(id, { actorId, ip }) {
+// Đặt trạng thái tài khoản (PATCH /users/:id/status). Đặt GIÁ TRỊ cụ thể thay vì đảo trạng thái
+// như DELETE /users/:id cũ: gửi lại cùng một yêu cầu (bấm 2 lần, retry mạng) không vô tình mở
+// khoá lại tài khoản vừa khoá.
+async function setUserStatus(id, { status, actorId, ip }) {
     const user = await userModel.findById(id);
     if (!user) {
         throw new AppError(404, ERROR_CODE.NOT_FOUND, 'User not found');
     }
+    if (user.status === status) {
+        return { id: Number(id), status }; // đã đúng trạng thái — không ghi gì, không audit
+    }
 
-    const newStatus = user.status === USER_STATUS.ACTIVE ? USER_STATUS.LOCKED : USER_STATUS.ACTIVE;
+    const locking = status === USER_STATUS.LOCKED;
 
-    // Cùng nguyên tắc với việc tự gỡ role Administrator của chính mình (permissionService) —
-    // không cho actor tự khoá tài khoản đang đăng nhập, tránh tự khoá mình (hoặc admin cuối
-    // cùng tự khoá chính mình, không ai unlock lại được).
-    if (newStatus === USER_STATUS.LOCKED && Number(id) === Number(actorId)) {
+    // Không cho actor tự khoá tài khoản đang đăng nhập (cùng nguyên tắc với việc không tự gỡ role
+    // Administrator của chính mình ở permissionService).
+    if (locking && Number(id) === Number(actorId)) {
         throw new AppError(403, ERROR_CODE.SELF_LOCK, 'You cannot lock your own account');
     }
     await assertCanTakeOverAccount(id, actorId, 'lock');
 
-    await userModel.setStatus(id, newStatus);
-    // Khoá thì thu hồi luôn refresh token: access token đã bị authenticate chặn qua session
-    // guard, nhưng để refresh token sống tới hạn thì mở khoá xong các phiên cũ lại dùng tiếp được.
-    if (newStatus === USER_STATUS.LOCKED) {
+    if (locking) {
+        // Kiểm tra "còn admin" và ghi trạng thái trong CÙNG transaction có khoá dòng — xem adminGuard.
+        await db.transaction(async (trx) => {
+            await assertKeepsActiveAdmin(id, trx);
+            await userModel.setStatus(id, status, trx);
+        });
+        // Thu hồi refresh token: access token đã bị authenticate chặn qua session guard, nhưng để
+        // refresh token sống tới hạn thì mở khoá xong các phiên cũ lại dùng tiếp được.
         await refreshTokenModel.revokeAllForUser(id);
+    } else {
+        await userModel.setStatus(id, status);
     }
 
-    const action = newStatus === USER_STATUS.ACTIVE ? 'Unlocked' : 'Locked';
+    const action = locking ? 'Locked' : 'Unlocked';
+    const newStatus = status;
     await auditLogModel.create({
         userId: actorId,
         action: AUDIT_ACTION.USER_LOCK_TOGGLE,
@@ -217,4 +234,4 @@ async function toggleUserStatus(id, { actorId, ip }) {
     return { id: Number(id), status: newStatus };
 }
 
-module.exports = { listUsers, createUser, updateUser, toggleUserStatus, exportUsers };
+module.exports = { listUsers, createUser, updateUser, setUserStatus, exportUsers };

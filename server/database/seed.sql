@@ -21,7 +21,8 @@ INSERT INTO actions (module_id, action_code, action_name) VALUES
 ((SELECT id FROM modules WHERE module_code = 'MOD_USER'), 'view', 'Xem danh sách'),
 ((SELECT id FROM modules WHERE module_code = 'MOD_USER'), 'create', 'Thêm mới'),
 ((SELECT id FROM modules WHERE module_code = 'MOD_USER'), 'edit', 'Sửa'),
-((SELECT id FROM modules WHERE module_code = 'MOD_USER'), 'delete', 'Khoá/Mở khoá'),
+((SELECT id FROM modules WHERE module_code = 'MOD_USER'), 'delete', 'Xoá (chưa dùng)'),
+((SELECT id FROM modules WHERE module_code = 'MOD_USER'), 'lock', 'Khoá/Mở khoá'),
 ((SELECT id FROM modules WHERE module_code = 'MOD_USER'), 'export_excel', 'Xuất Excel'),
 
 ((SELECT id FROM modules WHERE module_code = 'MOD_PERMISSION'), 'view', 'Xem danh sách'),

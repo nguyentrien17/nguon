@@ -40,6 +40,11 @@
   margin-top: 4px;
 }
 
+.avatar-card-preview {
+  display: flex;
+  justify-content: center;
+}
+
 /* ---------- Trường ---------- */
 .form-field {
   display: flex;

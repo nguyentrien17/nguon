@@ -1,13 +1,14 @@
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/core/auth/AuthContext';
+import { useSession } from '@/core/auth/SessionContext';
 import { useToast } from '@/app/providers/ToastContext';
 import { Form } from '@/components/form';
 import { updateProfileSchema, changePasswordSchema } from '@shared/validators/authValidators';
 import { changeMyPassword, updateMyProfile } from './profileApi';
+import AvatarCard from './AvatarCard';
 
 export default function Profile() {
     const { t } = useTranslation();
-    const { user, refreshProfile } = useAuth();
+    const { user, refreshProfile } = useSession();
     const toast = useToast();
 
     if (!user) return null;
@@ -40,6 +41,8 @@ export default function Profile() {
             <h1>{t('profile.title')}</h1>
 
             <div className="profile-grid">
+                <AvatarCard user={user} onChanged={refreshProfile} />
+
                 <Form
                     // key: nạp lại giá trị khi refreshProfile() trả về dữ liệu mới của user.
                     key={`${user.id}-${user.email}-${user.full_name}`}

@@ -59,7 +59,7 @@ async function update(id, fields, trx) {
     return base.update(id, filtered, trx);
 }
 
-const setStatus = (id, status) => update(id, { status });
+const setStatus = (id, status, trx) => update(id, { status }, trx);
 const resetLoginAttempts = (id) => update(id, { failed_login_attempts: 0, locked_until: null });
 
 // Tăng bộ đếm ngay trong DB (failed_login_attempts = failed_login_attempts + 1) thay vì đọc

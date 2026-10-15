@@ -18,7 +18,7 @@ export const detailsFromSelection = (selection) =>
     });
 
 /**
- * Bật/tắt một quyền. Tick edit/delete thì tự tick kèm view của cùng module (backend cũng tự
+ * Bật/tắt một quyền. Tick edit/delete/lock thì tự tick kèm view của cùng module (backend cũng tự
  * đảm bảo điều này khi lưu, đây chỉ là phản hồi tức thời trên UI).
  */
 export function toggleGrant(selection, tree, moduleId, actionId) {
@@ -31,7 +31,8 @@ export function toggleGrant(selection, tree, moduleId, actionId) {
     next.add(key);
     const moduleActions = tree.actionsOf(moduleId);
     const action = moduleActions.find((a) => a.id === actionId);
-    if (action?.action_code === ACTION_CODE.EDIT || action?.action_code === ACTION_CODE.DELETE) {
+    // Cùng danh sách với server (permissionService: edit / delete / lock kéo theo view).
+    if ([ACTION_CODE.EDIT, ACTION_CODE.DELETE, ACTION_CODE.LOCK].includes(action?.action_code)) {
         const view = moduleActions.find((a) => a.action_code === ACTION_CODE.VIEW);
         if (view) next.add(grantKey(moduleId, view.id));
     }

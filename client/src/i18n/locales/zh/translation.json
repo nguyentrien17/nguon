@@ -274,7 +274,14 @@
     "changePassword": "修改密码",
     "updated": "资料更新成功",
     "passwordChanged": "密码修改成功",
-    "passwordMismatch": "新密码与确认密码不一致"
+    "passwordMismatch": "新密码与确认密码不一致",
+    "avatarTitle": "头像",
+    "chooseAvatar": "新头像",
+    "avatarHint": "PNG、JPEG 或 WebP，最大 2 MB",
+    "uploadAvatar": "上传",
+    "removeAvatar": "移除头像",
+    "avatarUpdated": "头像已更新",
+    "avatarRemoved": "头像已移除"
   },
   "validation": {
     "required": "{{field}} 为必填项",

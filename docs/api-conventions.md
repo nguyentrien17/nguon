@@ -70,7 +70,8 @@ HTTP status đang dùng:
 | 401 | thiếu/sai access token, sai thông tin đăng nhập, refresh token không hợp lệ |
 | 403 | thiếu quyền, tài khoản bị vô hiệu hoá, tự khoá chính mình |
 | 404 | không tìm thấy bản ghi hoặc endpoint |
-| 409 | trùng dữ liệu (`ER_DUP_ENTRY`) |
+| 409 | trùng dữ liệu (`ER_DUP_ENTRY`); thao tác làm mất Administrator hoạt động cuối cùng (`ERR_LAST_ADMIN`) |
+| 413 | file tải lên vượt dung lượng cho phép |
 | 423 | tài khoản đang bị khoá tạm do đăng nhập sai nhiều lần |
 | 429 | vượt rate limit |
 | 500 | lỗi không lường trước |
@@ -111,9 +112,16 @@ stack trace không bao giờ ra tới client.
 Tiền tố `/api` lấy từ `API_PREFIX` trong `shared/constants.json`, dùng chung với client —
 đổi ở một nơi.
 
-**Lệch chuẩn đã có:** `DELETE /api/users/:id` thực chất là **khoá/mở khoá** tài khoản, không
-xoá, và cả hai chiều đều đòi quyền `MOD_USER:delete`. Ghi ở đây để không ai tưởng là xoá.
-Nên chuyển thành `PATCH /api/users/:id/status` ở một đợt có sửa client kèm theo.
+**Đổi trạng thái là `PATCH` trên tài nguyên con, không phải `DELETE`:** khoá / mở khoá tài
+khoản là `PATCH /api/users/:id/status` với body `{ "status": 0 | 1 }` (quyền `MOD_USER:lock`) —
+**đặt** giá trị, không đảo, nên gửi lại không đổi kết quả. `DELETE /api/users/:id` cũ (từng là
+khoá/mở khoá, đòi `MOD_USER:delete`) **đã bỏ** — thay đổi API có chủ đích, client đã sửa kèm;
+xem [security.md](security.md) mục 9.1.
+
+**Upload file:** `multipart/form-data`, một file mỗi request, qua `singleFileUpload` trong
+`core/http/upload.js`. Ví dụ `POST /api/auth/me/avatar` (trường `avatar`) trả hồ sơ mới
+`{ success, data: { ..., avatar: "/uploads/avatars/<uuid>.png" } }`. Đường dẫn file là tương đối
+với gốc server (không có `/api`) — client dùng `assetUrl()` trong `core/api/axiosClient.js`.
 
 **Mọi route có `:id` phải gắn `validateParams(idParamSchema)`.** Không có nó,
 `PUT /api/users/1abc` đi thẳng xuống `where({ id: '1abc' })`, MySQL coerce thành `1` và **sửa

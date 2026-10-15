@@ -274,7 +274,14 @@
     "changePassword": "Đổi mật khẩu",
     "updated": "Cập nhật hồ sơ thành công",
     "passwordChanged": "Đổi mật khẩu thành công",
-    "passwordMismatch": "Mật khẩu mới và xác nhận không khớp"
+    "passwordMismatch": "Mật khẩu mới và xác nhận không khớp",
+    "avatarTitle": "Ảnh đại diện",
+    "chooseAvatar": "Ảnh mới",
+    "avatarHint": "PNG, JPEG hoặc WebP, tối đa 2 MB",
+    "uploadAvatar": "Tải lên",
+    "removeAvatar": "Xoá ảnh",
+    "avatarUpdated": "Đã cập nhật ảnh đại diện",
+    "avatarRemoved": "Đã xoá ảnh đại diện"
   },
   "validation": {
     "required": "{{field}} là bắt buộc",

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, User, Lock } from 'lucide-react';
-import { useAuth } from '@/core/auth/AuthContext';
+import { useSession } from '@/core/auth/SessionContext';
 import { useToast } from '@/app/providers/ToastContext';
 import Spinner from '@/components/ui/Spinner';
 import { loginSchema } from '@shared/validators/authValidators';
@@ -12,7 +12,7 @@ import AuthLayout from './AuthLayout';
 
 export default function Login() {
     const { t, i18n } = useTranslation();
-    const { login } = useAuth();
+    const { login } = useSession();
     const toast = useToast();
     const navigate = useNavigate();
     const location = useLocation();

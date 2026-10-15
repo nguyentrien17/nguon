@@ -25,8 +25,9 @@ const updateUser = asyncHandler(async (req, res) => {
     return res.json({ success: true });
 });
 
-const toggleUserStatus = asyncHandler(async (req, res) => {
-    const data = await userService.toggleUserStatus(req.params.id, { actorId: req.user.id, ip: req.ip });
+// PATCH /users/:id/status — body { status: 0 | 1 } (USER_STATUS.LOCKED | ACTIVE).
+const setUserStatus = asyncHandler(async (req, res) => {
+    const data = await userService.setUserStatus(req.params.id, { status: req.body.status, actorId: req.user.id, ip: req.ip });
     return res.json({ success: true, data });
 });
 
@@ -44,4 +45,4 @@ const listUserRoles = asyncHandler(async (req, res) => {
     return res.json({ success: true, data });
 });
 
-module.exports = { listUsers, createUser, updateUser, toggleUserStatus, exportUsers, listUserRoles };
+module.exports = { listUsers, createUser, updateUser, setUserStatus, exportUsers, listUserRoles };

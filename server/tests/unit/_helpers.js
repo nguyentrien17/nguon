@@ -16,7 +16,14 @@ process.env.JWT_REFRESH_SECRET = 'unit-test-refresh-secret-0123456789abcdef';
 
 function mockReq({ headers = {}, ...rest } = {}) {
     const lower = Object.fromEntries(Object.entries(headers).map(([k, v]) => [k.toLowerCase(), v]));
-    return { headers: lower, get: (name) => lower[name.toLowerCase()], locale: 'en', ...rest };
+    return {
+        headers: lower,
+        get: (name) => lower[name.toLowerCase()],
+        // Như req.is() của Express (đủ cho các test này): khớp theo đầu Content-Type.
+        is: (type) => ((lower['content-type'] || '').startsWith(type) ? type : false),
+        locale: 'en',
+        ...rest,
+    };
 }
 
 function mockRes() {

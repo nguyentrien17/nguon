@@ -5,21 +5,13 @@ import { LogOut, Menu } from 'lucide-react';
 import Sidebar from './Sidebar';
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 import Spinner from '@/components/ui/Spinner';
+import Avatar from '@/components/ui/Avatar';
 import ErrorBoundary from '@/core/errors/ErrorBoundary';
-import { useAuth } from '@/core/auth/AuthContext';
-
-function initials(name = '') {
-    return name
-        .split(' ')
-        .filter(Boolean)
-        .slice(-2)
-        .map((p) => p[0]?.toUpperCase())
-        .join('');
-}
+import { useSession } from '@/core/auth/SessionContext';
 
 export default function Layout() {
     const { t } = useTranslation();
-    const { user, logout } = useAuth();
+    const { user, logout } = useSession();
     const { pathname } = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -44,7 +36,7 @@ export default function Layout() {
                         <LanguageSwitcher />
                         <div className="app-user">
                             <Link to="/profile" className="app-user-link" title={t('profile.title')}>
-                                <span className="avatar-circle">{initials(user?.full_name)}</span>
+                                <Avatar src={user?.avatar} name={user?.full_name} size={32} />
                                 <span className="app-user-name">{user?.full_name}</span>
                             </Link>
                             <button type="button" onClick={logout} title={t('nav.logout')} aria-label={t('nav.logout')}>

@@ -67,7 +67,7 @@ Client gọi API qua `VITE_API_URL`, mặc định
 | `npm test` | 60 unit test (`node:test`), không cần DB |
 | `npm run lint` | ESLint, gồm luật Core không import Features |
 | `npm run test:contract` | 31 assertion contract API (cần server đang chạy) |
-| `npm run test:security` | 27 assertion guard bảo mật user/phiên (cần server đang chạy) |
+| `npm run test:security` | 30 assertion guard bảo mật user/phiên (cần server đang chạy + đã `npm run migrate`) |
 | `npm run audit` | `npm audit --omit=dev` |
 
 **client/**
@@ -92,6 +92,7 @@ Client gọi API qua `VITE_API_URL`, mặc định
 | `PORT` | | `5000` | từ `DEFAULT_SERVER_PORT` |
 | `CLIENT_ORIGIN` | | `http://localhost:5173` | dùng cho CORS **và** link đặt lại mật khẩu |
 | `TRUST_PROXY` | | `false` | `true` (1 proxy) hoặc số proxy khi chạy sau reverse proxy — xem [security.md](security.md) mục 3 |
+| `UPLOAD_DIR` | | `server/uploads` | nơi lưu file người dùng tải lên (ảnh đại diện...), phục vụ ở `/uploads`. Nhiều instance thì cần ổ chung — xem [security.md](security.md) mục 11 |
 | `LOGIN_RATE_LIMIT_MAX` | | `5` | số lần login/forgot/reset mỗi phút mỗi IP. Có thể nới khi chạy test liên tục trên máy dev |
 | `JWT_ACCESS_EXPIRES_IN` | | `15m` | |
 | `JWT_REFRESH_EXPIRES_IN` | | `7d` | |

@@ -41,7 +41,7 @@ request kế tiếp thay vì phải chờ access token hết hạn.
 Token *vẫn* chứa danh sách quyền, nhưng **chỉ để client dựng UI**. Đừng dùng nó để quyết định
 ở backend.
 
-Danh sách quyền ở client có thể cũ hơn DB (admin vừa đổi role). `AuthContext` đồng bộ lại (gọi
+Danh sách quyền ở client có thể cũ hơn DB (admin vừa đổi role). `SessionProvider` đồng bộ lại (gọi
 `/auth/refresh`) khi một request bị 403 `ERR_PERMISSION_DENIED`, và khi người dùng quay lại tab
 sau hơn 5 phút; tối đa 1 lần / 30 giây. Đây chỉ là để nút/menu hiển thị đúng — việc chặn thật
 vẫn do backend làm ở mọi request.
@@ -155,27 +155,48 @@ khoản thường, không bị ảnh hưởng.
 phiên đăng nhập trong tối đa 7 ngày.
 
 Cùng guard này (với `actionKey: 'lock'`) chặn **actor không phải Administrator khoá/mở khoá
-tài khoản Administrator** qua `DELETE /users/:id` — nếu không, quyền `MOD_USER:delete` đủ để khoá
-toàn bộ admin ra khỏi hệ thống. Khoá một user cũng **revoke toàn bộ refresh token** của user đó.
+tài khoản Administrator** qua `PATCH /users/:id/status` — nếu không, quyền khoá tài khoản đủ để
+khoá toàn bộ admin ra khỏi hệ thống. Khoá một user cũng **revoke toàn bộ refresh token** của user đó.
 
-Được phủ bởi `npm run test:security` (27 assertion), gồm cả việc kiểm tra guard **không** chặn
+Được phủ bởi `npm run test:security` (30 assertion), gồm cả việc kiểm tra guard **không** chặn
 quá rộng.
+
+### 9.1. Khoá / mở khoá có quyền riêng `MOD_USER:lock`
+
+Trước đây là `DELETE /api/users/:id` đòi `MOD_USER:delete` — không thể cấp quyền khoá tài khoản
+mà không cấp luôn quyền mang tên "xoá". Nay:
+
+- Endpoint `PATCH /api/users/:id/status`, body `{ "status": 0 | 1 }` — **đặt** trạng thái (không
+  đảo), gửi lại cùng yêu cầu không mở khoá lại tài khoản vừa khoá.
+- Quyền `MOD_USER:lock`. Migration `012_user_lock_action.sql` thêm action và **cấp cho mọi role
+  đang có `MOD_USER:delete`** nên không ai mất khả năng hiện có. `DELETE /api/users/:id` đã bỏ (404).
+- `MOD_USER:delete` vẫn còn trong DB (đổi tên "Xoá (chưa dùng)") — không endpoint nào dùng.
+
+### 9.2. Luôn còn ít nhất một Administrator hoạt động
+
+`features/permissions/adminGuard.js → assertKeepsActiveAdmin` chạy **trong transaction có khoá
+dòng** (`SELECT ... FOR UPDATE` các admin đang hoạt động) ngay trước hai thao tác có thể làm mất
+admin cuối cùng: **khoá tài khoản** và **gỡ role Administrator**. Vi phạm -> 409 `ERR_LAST_ADMIN`.
+
+Vì sao cần khoá dòng: không có nó, A khoá B **đồng thời** với B khoá A thì cả hai cùng thấy "còn
+admin khác" và cùng thành công — hệ thống không còn admin nào để mở khoá. Đã kiểm trên MySQL
+thật: hai transaction khoá lẫn nhau cùng lúc -> đúng một bên thành công, bên kia `ERR_LAST_ADMIN`.
+
+Admin khoá admin khác (khi vẫn còn admin hoạt động) **vẫn được phép** — khoá gấp một tài khoản
+admin bị xâm nhập là nhu cầu chính đáng, và hành động này đảo ngược được.
+
+### 9.3. Chỉ Administrator mới gán / gỡ được role Administrator
+
+`adminGuard.assertCanManageProtectedRole` — áp dụng ở gán role, gỡ role, và gán role lúc tạo
+user. **Trước đây** quyền `MOD_PERMISSION:edit` (quản lý phân quyền thông thường) đủ để **tự gán
+`ROLE_ADMIN` cho chính mình** -> thành admin, vượt qua mọi kiểm tra quyền chi tiết. Gán / gỡ các
+role thường không bị ảnh hưởng.
 
 ## 10. Vấn đề bảo mật đã biết, CHƯA sửa
 
-### 10.1. `DELETE /api/users/:id` thực ra là khoá/mở khoá
+### 10.1. ~~`DELETE /api/users/:id` thực ra là khoá/mở khoá~~ — đã sửa, xem 9.1
 
-Cả hai chiều đều đòi quyền `MOD_USER:delete`, nên không thể cấp quyền "mở khoá tài khoản" mà
-không cấp luôn quyền mang tên "xoá". Cần đổi thành `PATCH /api/users/:id/status` kèm sửa client.
-
-### 10.2. Administrator khoá được Administrator khác
-
-`toggleUserStatus` chặn **tự khoá chính mình** (`ERR_SELF_LOCK`) và chặn **actor thường** khoá
-admin (mục 9), nhưng admin A vẫn khoá được admin B — kể cả khi B là admin còn lại duy nhất.
-
-**Cố ý không chặn:** khoá tài khoản là hành động **đảo ngược được** (mở khoá lại), và việc khoá
-gấp một tài khoản admin bị xâm nhập là nhu cầu chính đáng. Khác với 9: chiếm thông tin đăng nhập
-thì không đảo ngược được. Nếu muốn chặn, phải xử lý được kịch bản "admin cuối cùng" trước.
+### 10.2. ~~Administrator khoá được Administrator cuối cùng~~ — đã sửa, xem 9.2
 
 ### 10.3. Chưa có email provider thật
 
@@ -184,3 +205,22 @@ Xem mục 4 — link đặt lại mật khẩu đang được log ra console ser
 ### 10.4. `sigKey` nằm trong payload JWT
 
 Xem mục 5 — giới hạn thiết kế đã biết của `verifySignature`.
+
+## 11. Upload file
+
+Hạ tầng: `core/http/upload.js` (`singleFileUpload`), `core/storage/fileStorage.js`, phục vụ tĩnh
+ở `/uploads` (`server.js`). Dùng đầu tiên cho ảnh đại diện (`POST/DELETE /api/auth/me/avatar`).
+
+| Lớp bảo vệ | Chi tiết |
+|---|---|
+| Loại file | Theo **magic bytes** (`sniffFileType`), không tin `Content-Type` / đuôi file client gửi — file PHP đổi tên `.png` bị từ chối |
+| Dung lượng | `multer` dừng đọc khi vượt `maxSize` -> 413; giữ trong bộ nhớ, tối đa 1 file |
+| Chữ ký | Multipart ký trên chuỗi chuẩn hoá có **SHA-256 + kích thước từng file** (`shared/multipartSignature.js`, dùng chung client/server). Middleware upload chạy **trước** `verifySignature` để có nội dung file mà tính |
+| Tên file | Server tự đặt (UUID + đuôi theo magic bytes), không dùng tên client gửi |
+| Xoá file | `removeUpload` chỉ xoá trong `UPLOAD_DIR`, chặn path traversal; bỏ qua URL ngoài |
+| Khi phục vụ | `Content-Security-Policy: default-src 'none'` + `nosniff` (helmet) — trình duyệt không chạy được gì từ file tải lên; `Cross-Origin-Resource-Policy: cross-origin` để client khác origin hiển thị được ảnh |
+
+Giới hạn: file nằm trên đĩa server (`UPLOAD_DIR`, mặc định `server/uploads`, đã gitignore) —
+chạy nhiều instance thì cần ổ chung hoặc chuyển `fileStorage.js` sang object storage (S3...).
+File ở `/uploads` là **công khai** với ai biết URL (tên UUID khó đoán, nhưng không có kiểm tra
+quyền) — đừng dùng cho tài liệu cần bảo mật.

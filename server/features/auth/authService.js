@@ -10,6 +10,7 @@ const db = require('#core/database/db');
 const AppError = require('#core/errors/AppError');
 const { buildFieldDiff } = require('#core/utils/auditDiff');
 const { sendPasswordResetEmail } = require('#core/mailer');
+const { saveUpload, removeUpload } = require('#core/storage/fileStorage');
 const env = require('#core/config/env');
 const logger = require('#core/logger');
 const { signAccessToken, signRefreshToken, verifyRefreshToken, REFRESH_EXPIRES_IN } = require('#core/security/jwt');
@@ -170,6 +171,40 @@ async function updateProfile(userId, { email, full_name, ip }) {
     return getProfile(userId);
 }
 
+// Ảnh đại diện: file đã qua kiểm tra loại (magic bytes) + chữ ký ở middleware. Lưu file mới TRƯỚC,
+// cập nhật DB, rồi mới xoá file cũ — lỗi giữa chừng không để user trỏ tới file đã bị xoá.
+async function updateAvatar(userId, { file, ip }) {
+    const user = await userModel.findById(userId);
+    if (!user) {
+        throw new AppError(404, ERROR_CODE.NOT_FOUND, 'User not found');
+    }
+
+    const publicPath = await saveUpload(file.buffer, { folder: 'avatars', ext: file.detectedType.ext });
+    try {
+        await userModel.update(userId, { avatar: publicPath });
+    } catch (err) {
+        await removeUpload(publicPath).catch(() => {});
+        throw err;
+    }
+    await removeUpload(user.avatar).catch((err) => logger.warn('Không xoá được ảnh đại diện cũ:', err.message));
+
+    await auditLogModel.create({ userId, action: AUDIT_ACTION.PROFILE_UPDATE, ip, status: AUDIT_STATUS.SUCCESS, detail: 'avatar changed' });
+    return getProfile(userId);
+}
+
+async function removeAvatar(userId, { ip }) {
+    const user = await userModel.findById(userId);
+    if (!user) {
+        throw new AppError(404, ERROR_CODE.NOT_FOUND, 'User not found');
+    }
+    if (!user.avatar) return getProfile(userId);
+
+    await userModel.update(userId, { avatar: null });
+    await removeUpload(user.avatar).catch((err) => logger.warn('Không xoá được ảnh đại diện:', err.message));
+    await auditLogModel.create({ userId, action: AUDIT_ACTION.PROFILE_UPDATE, ip, status: AUDIT_STATUS.SUCCESS, detail: 'avatar removed' });
+    return getProfile(userId);
+}
+
 // Session guard cho core/security/authenticate.js (đăng ký ở server.js): access token chỉ
 // còn hiệu lực khi user còn tồn tại và chưa bị khoá. Thiếu bước này, khoá một tài khoản không
 // có tác dụng gì với access token đã cấp cho tới khi nó hết hạn (JWT_ACCESS_EXPIRES_IN).
@@ -253,6 +288,8 @@ module.exports = {
     logout,
     getProfile,
     updateProfile,
+    updateAvatar,
+    removeAvatar,
     isSessionActive,
     changePassword,
     requestPasswordReset,

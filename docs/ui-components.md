@@ -310,16 +310,14 @@ Tất cả nhận `onChange(value)` — **giá trị, không phải event**:
 - **Validate ở client chỉ để báo lỗi sớm**; server vẫn validate lại bằng cùng schema.
 - **Thông báo lỗi** lấy từ key `validation.*` trong schema (vd `'validation.tooShort'`). Schema
   không ghi message (vd `.max(255)`) vẫn được dịch theo loại lỗi, không lọt câu tiếng Anh của zod.
-- **Gửi file lên server: CHƯA dùng được với API hiện tại.**
-  - Backend chưa có endpoint nhận upload (chưa có thư viện multipart như `multer`).
-  - Chữ ký request trong `core/api/axiosClient.js` ký trên `JSON.stringify(body)`. Body
-    `FormData` sẽ bị ký thành `'{}'`, trong khi server ký trên body rỗng → **400
-    `ERR_INVALID_SIGNATURE`**.
-  - Khi cần upload thật: thêm endpoint + multer ở server, và quyết định cách ký multipart (vd
-    ký trên hash của file) hoặc đưa route upload vào danh sách không ký ở **cả hai phía**
-    (`UNSIGNED_URLS` và route backend) — xem [security.md](security.md) mục 5.
-  - `FileInput` đã sẵn sàng phía giao diện; kiểm tra `accept`/`maxSize` ở client **không**
-    thay thế kiểm tra ở server.
+- **Gửi file lên server:** tạo `FormData` trong `<feature>Api.js` rồi gọi `axiosClient.post` như
+  thường — `axiosClient` **tự ký** request multipart (chuỗi chuẩn hoá có SHA-256 từng file,
+  `shared/multipartSignature.js`). Mẫu: `features/profile/profileApi.js → uploadMyAvatar` và
+  `features/profile/AvatarCard.jsx` (FileInput + nút Tải lên / Xoá ảnh).
+  - Phía server dùng `singleFileUpload` (`core/http/upload.js`) đặt **trước** `verifySignature`.
+  - `accept` / `maxSize` của `FileInput` nên khớp giới hạn server, nhưng chỉ để báo sớm — server
+    kiểm tra lại (loại file theo magic bytes). Xem [security.md](security.md) mục 11.
+  - Hiển thị file server trả về (`/uploads/...`) qua `assetUrl()` hoặc `<Avatar src>`.
 - Style: khung `.modal-card` / `.profile-card` cũ được ưu tiên hơn style của form (để trang
   cũ trông y như trước); ngoài các khung đó dùng style trong `components/form/form.css`.
 
