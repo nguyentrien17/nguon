@@ -96,4 +96,5 @@ Build production: đặt `VITE_API_URL` (xem `client/.env.example`) **trước**
 - Quên mật khẩu (`/forgot-password`): chưa cấu hình SMTP/email provider thật — link reset hiện chỉ được log ra console server (`server/core/mailer.js`). Cần thay bằng provider thật (SendGrid/SES/SMTP...) trước khi dùng production.
 - `npm run audit` (root/client/server) chạy `npm audit --omit=dev`.
 - `LOG_LEVEL` (`error`/`warn`/`info`/`debug`) điều chỉnh độ chi tiết của application log; mặc định `debug` ở development, `info` ở production.
-- Test tự động (đều ở `server/`): `npm run smoke` (không cần DB), `npm run test:contract` và `npm run test:security` (cần server đang chạy + MySQL). Chưa có unit test, chưa có test UI, chưa có CI, chưa có Dockerfile — xem [docs/testing.md](docs/testing.md).
+- Kiểm tra tự động (đều ở `server/`): `npm run lint`, `npm test` (unit, không cần DB), `npm run smoke` (không cần DB), `npm run test:contract` và `npm run test:security` (cần server đang chạy + MySQL). Chưa có test UI, chưa có CI, chưa có Dockerfile — xem [docs/testing.md](docs/testing.md).
+- Server dùng `overrides` trong `package.json` để ép `uuid` (phụ thuộc gián tiếp của `exceljs`) lên `11.1.1` — bản `8.x` mà `exceljs` kéo về có lỗ hổng. Khi nâng `exceljs`, kiểm tra lại xem còn cần override không.

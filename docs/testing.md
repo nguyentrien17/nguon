@@ -2,18 +2,38 @@
 
 ## 1. Hiện trạng — đọc trước khi tin
 
-Repo **chưa có test framework** (không jest, không vitest, không supertest). Chỉ có hai script
-tự viết bằng Node thuần:
+Unit test dùng **`node:test`** có sẵn trong Node — không thêm dependency nào (mục 14 của kế
+hoạch). Test tích hợp là script Node thuần gọi API thật.
 
 | Lệnh | Ở đâu | Cần gì | Kiểm tra gì |
 |---|---|---|---|
+| `npm test` | `server/tests/unit/*.test.js` | **không** cần DB, không cần server | 60 test: error handler + bảng dịch, `validateBody`/`validateParams` + schema shared, `authenticate` (session guard), `verifySignature`, `validateEnv` (chạy trong child process), `permissionMiddleware`, `userService` (guard khoá/chiếm tài khoản admin), `authService` (refresh, ngưỡng khoá đăng nhập) |
+| `npm run lint` | `server/` | — | ESLint toàn bộ server, **kể cả quy tắc Core không import Features** |
 | `npm run smoke` | `server/tests/smoke.load.js` | không cần DB, không cần server chạy | load 22 entry point, `validateEnv()` chạy được, Core không giành việc phân quyền của Feature |
 | `npm run test:contract` | `server/tests/contract.api.js` | **cần** server đang chạy + MySQL đã seed | 31 assertion về contract API mà client phụ thuộc |
 | `npm run test:security` | `server/tests/users.security.js` | **cần** server đang chạy + MySQL | 27 assertion về guard chống chiếm/khoá tài khoản đặc quyền, thu hồi phiên khi đổi password/khoá user, refresh song song, bộ đếm đăng nhập sai nguyên tử, JSON hỏng → 400, validate `:id`, clamp `limit`, rollback transaction |
 | `npm run lint` | `client/` | — | eslint toàn bộ `client/src` |
 | `npm run build` | `client/` | — | Vite build, bắt lỗi import/alias |
 
-**Không có:** unit test, integration test cho service, test cho migration, test cho UI, CI.
+**Không có:** test cho migration, test cho UI, CI.
+
+## 1b. `npm test` — unit test
+
+```bash
+cd server && npm test
+```
+
+Viết test mới trong `server/tests/unit/<tên>.test.js`, dòng đầu luôn là
+`require('./_helpers')`: nó đặt env cố định (không phụ thuộc `server/.env` của từng máy) và
+**trỏ DB vào port 1**. Unit test không được chạm DB — service được test bằng cách thay model
+qua `mock.method(userModel, 'findById', ...)`. Quên mock một hàm model thì query thật bị
+ECONNREFUSED và test fail ngay, thay vì âm thầm ghi vào MySQL trên máy dev.
+
+`mock.method` chỉ hoạt động vì service gọi model **qua object** (`userModel.findById(...)`).
+Đừng đổi sang destructure (`const { findById } = require(...)`) ở service — sẽ không mock được.
+
+Đã kiểm chứng test có bắt lỗi thật: tạm bỏ guard khoá admin trong `toggleUserStatus` thì đúng
+2 test liên quan fail.
 
 ## 2. `npm run smoke` — kiểm tra đường dẫn
 
@@ -80,12 +100,13 @@ database production.
 
 ## 4. Kiểm tra quy tắc phụ thuộc
 
-Hai lệnh grep, nên đưa vào CI khi có CI:
+**Core không import Feature** giờ là luật ESLint (`no-restricted-syntax` trong
+`server/eslint.config.js`, áp cho `core/**`) — `npm run lint` fail nếu vi phạm, bắt cả
+`require('#features/...')` lẫn `require('../../features/...')`.
+
+Còn một lệnh grep, nên đưa vào CI khi có CI:
 
 ```bash
-# Core không được import Feature — phải in PASS
-grep -rnE "require\(['\"](#features/|\.\./)*features/" server/core/ && echo "VI PHAM" || echo "PASS"
-
 # Shared chỉ được phụ thuộc zod — phải không có output
 grep -rn "require(" shared/ | grep -v "require('zod')" | grep -v "require('\./"
 ```
@@ -146,19 +167,18 @@ Theo mục 13 của kế hoạch refactor, làm từng bước, không viết th
 ổn định:
 
 1. ✅ Smoke test khởi động server — **đã có**
-2. ✅ Test thiếu biến môi trường — **một phần**: `smoke.load.js` xác nhận `validateEnv()` chạy
-   được; chưa test được nhánh *thiếu* biến vì nó gọi `process.exit(1)` (cần chạy trong child
-   process mới test được)
-3. ⬜ Test error handler và validator dùng chung — cần framework
-4. ✅ Test đăng nhập, refresh, logout, quyền truy cập — **một phần** trong contract test
-5. ⬜ Test các service quan trọng (`userService`, `permissionService`) — cần mock DB hoặc DB test
+2. ✅ Test thiếu biến môi trường — `validateEnv.test.js` chạy từng trường hợp trong child process
+3. ✅ Test error handler và validator dùng chung — `errors.test.js`, `validate.test.js`
+4. ✅ Test đăng nhập, refresh, logout, quyền truy cập — unit (`security.test.js`,
+   `services.test.js`) + contract/security test
+5. ✅ Test các service quan trọng — **một phần**: `userService`, `authService`,
+   `permissionMiddleware`. Chưa có: `permissionService`, `moduleService`, `actionService`
 6. ✅ Test API cho users và RBAC — **một phần** trong contract test
 7. ⬜ Test migration trên database thử nghiệm
-8. ⬜ Lint cho server + CI
+8. ✅ Lint cho server — ⬜ CI
 
-Khi thêm framework, đề xuất **vitest** (client đã dùng Vite nên chia sẻ cấu hình) hoặc
-**node:test** (có sẵn trong Node 22, không thêm dependency — phù hợp với nguyên tắc "không thêm
-thư viện nếu chưa chứng minh được nhu cầu" ở mục 14).
+Framework đã chọn **node:test** thay vì vitest: có sẵn trong Node, không thêm dependency, server
+là CommonJS nên không hưởng lợi gì từ cấu hình Vite.
 
 ## 7. Quy tắc báo cáo kết quả test
 

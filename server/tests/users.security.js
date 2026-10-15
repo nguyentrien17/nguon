@@ -200,7 +200,6 @@ async function main() {
     const victimLive = winners[0];
 
     // 8d. User tự đổi mật khẩu -> thu hồi các phiên KHÁC, giữ phiên đang thao tác.
-    let victimPassword = 'Changed@12345';
     if (victimLive) {
         const [otherId] = await db('refresh_tokens').insert({
             user_id: victimId,
@@ -209,11 +208,10 @@ async function main() {
         });
         const selfChange = await signedRequest(
             'PUT', '/auth/password', victimLive.body.accessToken, victimLive.body.signingKey,
-            { currentPassword: victimPassword, newPassword: 'Changed@67890' },
+            { currentPassword: 'Changed@12345', newPassword: 'Changed@67890' },
             { Cookie: victimLive.cookie }
         );
         check('tự đổi mật khẩu -> 200', selfChange.status === 200, `${selfChange.status} ${JSON.stringify(selfChange.body)}`);
-        if (selfChange.status === 200) victimPassword = 'Changed@67890';
 
         const other = await db('refresh_tokens').where({ id: otherId }).first('revoked');
         check('tự đổi mật khẩu -> phiên khác bị revoke', other && Number(other.revoked) === 1);

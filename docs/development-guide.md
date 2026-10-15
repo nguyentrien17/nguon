@@ -64,6 +64,8 @@ Client gọi API qua `VITE_API_URL`, mặc định
 | `npm run migrate` | chạy migration chưa áp dụng |
 | `npm run migrate -- --baseline` | đánh dấu đã áp dụng, không thực thi |
 | `npm run smoke` | load toàn bộ import graph, không cần DB |
+| `npm test` | 60 unit test (`node:test`), không cần DB |
+| `npm run lint` | ESLint, gồm luật Core không import Features |
 | `npm run test:contract` | 31 assertion contract API (cần server đang chạy) |
 | `npm run test:security` | 27 assertion guard bảo mật user/phiên (cần server đang chạy) |
 | `npm run audit` | `npm audit --omit=dev` |

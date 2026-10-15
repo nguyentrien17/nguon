@@ -76,7 +76,9 @@ server/
 │   ├── migrations/           001..010_*.sql, chạy theo thứ tự tên file
 │   │   └── pending/          migration đã viết nhưng CHƯA áp dụng (migrate.js không đọc thư mục con)
 │   └── migrate.js            runner tự viết, tracking ở bảng schema_migrations
+├── eslint.config.js          ESLint (npm run lint), gồm luật Core không import Features
 └── tests/
+    ├── unit/                 node:test, không cần DB — _helpers.js + *.test.js  (npm test)
     ├── smoke.load.js         load toàn bộ import graph, không cần DB  (npm run smoke)
     ├── contract.api.js       contract API mà client phụ thuộc       (npm run test:contract)
     └── users.security.js     guard bảo mật user/phiên                (npm run test:security)
@@ -188,6 +190,6 @@ Xếp theo thứ tự nên làm:
 5. **`shared/` là CommonJS, client là ESM** — hiện chạy được nhờ Vite interop, sẽ vỡ nếu
    root `package.json` thêm `"type": "module"` hoặc khi dùng `shared/` trong test runner ESM.
 6. ~~**Các tài liệu còn thiếu**~~ — đã có đủ 9 file trong `docs/` theo mục 5 của kế hoạch.
-7. **ESLint cho server, CI, Dockerfile** — chưa có; xem [testing.md](testing.md) mục 6.
+7. **CI, Dockerfile** — chưa có (ESLint server và unit test đã có); xem [testing.md](testing.md) mục 6.
 8. **`.gitattributes`** — repo chưa chuẩn hoá line ending (git cảnh báo LF→CRLF trên hầu hết
    file). Thêm `* text=auto eol=lf` sẽ renormalize toàn bộ repo, nên làm thành một commit riêng.
