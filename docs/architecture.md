@@ -167,7 +167,8 @@ Schema dựng từ `server/database/schema.sql` + `seed.sql`. Thay đổi về s
 `server/database/migrate.js` (**không** dùng knex migrate API), theo dõi trạng thái trong
 bảng `schema_migrations` nên chạy lại nhiều lần vẫn an toàn.
 
-Chi tiết quy ước: xem [database-conventions.md](database-conventions.md) *(chưa viết)*.
+Chi tiết quy ước, mô hình RBAC và **các vấn đề đã biết trong schema**: xem
+[database-conventions.md](database-conventions.md).
 
 ## 9. Những gì chưa có
 

@@ -224,7 +224,21 @@
       "Bash(sed -i -e \"s|'\\\\.\\\\./context/AuthContext'|'@/core/auth/AuthContext'|\" core/permissions/ActionGuard.jsx core/permissions/ProtectedRoute.jsx)",
       "Bash(sed -i -e \"s|'\\\\.\\\\./i18n'|'@/i18n'|\" -e \"s|'\\\\.\\\\./utils/requestSigning'|'./requestSigning'|\" core/api/axiosClient.js)",
       "Bash(sed -i -e \"s|'\\\\.\\\\./api/axiosClient'|'@/core/api/axiosClient'|\" -e \"s|'\\\\./ToastContext'|'@/app/providers/ToastContext'|\" core/auth/AuthContext.jsx)",
-      "Bash(sed -i -e \"s|'\\\\./App.jsx'|'@/app/App.jsx'|\" -e \"s|'\\\\./components/ErrorBoundary.jsx'|'@/core/errors/ErrorBoundary.jsx'|\" main.jsx)"
+      "Bash(sed -i -e \"s|'\\\\./App.jsx'|'@/app/App.jsx'|\" -e \"s|'\\\\./components/ErrorBoundary.jsx'|'@/core/errors/ErrorBoundary.jsx'|\" main.jsx)",
+      "Bash(mkdir -p migrations/pending)",
+      "Bash(mv migrations/011_permission_details_unique.sql migrations/pending/)",
+      "Bash(awk '{print $1}')",
+      "PowerShell(git ls-files --others --exclude-standard -co | Where-Object { $_ -notmatch 'node_modules' } | Sort-Object; \"---\"; Get-Content .gitignore -ErrorAction SilentlyContinue; \"---\"; Get-ChildItem -Force | Select-Object Mode,Name)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue)",
+      "PowerShell(Start-Process -FilePath node -ArgumentList 'server.js' -WorkingDirectory server -RedirectStandardOutput \"$env:TEMP\\\\claude\\\\srv.out\" -RedirectStandardError \"$env:TEMP\\\\claude\\\\srv.err\" -WindowStyle Hidden -PassThru | Select-Object -ExpandProperty Id | Out-File \"$env:TEMP\\\\claude\\\\srv.pid\"; Start-Sleep 3; Push-Location server; npm run test:contract 2>&1 | Select-Object -Last 4; npm run test:security 2>&1 | Select-Object -Last 6; Pop-Location)",
+      "PowerShell(Get-Content \"$env:TEMP\\\\claude\\\\srv.out\",\"$env:TEMP\\\\claude\\\\srv.err\" -ErrorAction SilentlyContinue | Select-Object -Last 15; Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue)",
+      "PowerShell($i=0; while \\(-not \\(Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue\\) -and $i -lt 20\\) { Start-Sleep -Milliseconds 500; $i++ }; Push-Location server; npm run test:contract 2>$null | Select-Object -Last 3; npm run test:security 2>$null | Select-Object -Last 4; Pop-Location)",
+      "PowerShell(Select-String -Path server/.env -Pattern '^\\(TRUST_PROXY|JWT_ACCESS_SECRET|JWT_REFRESH_SECRET\\)=' | ForEach-Object { $k,$v = $_.Line -split '=',2; \"$k len=$\\($v.Length\\)\" })",
+      "PowerShell(node -e \"console.log\\(require\\('./client/node_modules/vite/package.json'\\).engines\\)\")",
+      "PowerShell($p = Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess; if \\($p\\) { \\(Get-CimInstance Win32_Process -Filter \"ProcessId=$p\"\\).CommandLine; Stop-Process -Id $p -Confirm:$false })",
+      "PowerShell($i=0; while \\(-not \\(Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue\\) -and $i -lt 20\\) { Start-Sleep -Milliseconds 500; $i++ }; Push-Location server; \"== smoke\"; npm run smoke 2>$null | Select-Object -Last 2; \"== ready\"; \\(Invoke-WebRequest http://localhost:5000/health/ready -UseBasicParsing\\).Content; \"== contract\"; npm run test:contract 2>$null | Select-String 'FAIL|OK:'; \"== security\"; npm run test:security 2>$null; Pop-Location)",
+      "PowerShell(Set-Location D:\\\\Trien\\\\Download\\\\Tailieu\\\\Home\\\\Nguon\\\\server; $env:LOGIN_RATE_LIMIT_MAX='50'; node server.js)",
+      "PowerShell(Set-Location D:\\\\Trien\\\\Download\\\\Tailieu\\\\Home\\\\Nguon\\\\server; $i=0; while \\(-not \\(Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue\\) -and $i -lt 20\\) { Start-Sleep -Milliseconds 500; $i++ }; node tests/_tmp_reset_check.js; Remove-Item tests/_tmp_reset_check.js -Confirm:$false)"
     ],
     "additionalDirectories": [
       "C:\\Users\\TRIEN~1.NGU\\AppData\\Local\\Temp\\claude\\d--Trien-Download-Tailieu-Home-Nguon\\504e2412-c5fa-4043-81a1-9326a56af5ce\\scratchpad"

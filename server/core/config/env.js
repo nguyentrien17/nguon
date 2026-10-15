@@ -10,6 +10,16 @@ require('dotenv').config();
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
+// Mặc định KHÔNG tin proxy: tin nhầm thì client tự gửi X-Forwarded-For giả để vượt rate limit
+// và ghi IP giả vào audit log. Chạy sau nginx/Cloudflare... thì đặt TRUST_PROXY=true (tin 1
+// proxy gần nhất) hoặc một số nguyên = số proxy phía trước.
+function parseTrustProxy(value) {
+    if (value === undefined || value === '' || value === 'false') return false;
+    if (value === 'true') return 1;
+    const hops = Number(value);
+    return Number.isInteger(hops) && hops >= 0 ? hops : false;
+}
+
 const env = {
     NODE_ENV,
     isProduction: NODE_ENV === 'production',
@@ -17,11 +27,13 @@ const env = {
     PORT: process.env.PORT,
     LOG_LEVEL: process.env.LOG_LEVEL,
     CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
-    // Mặc định tin 1 proxy gần nhất; chỉ tắt khi đặt tường minh TRUST_PROXY=false.
-    TRUST_PROXY: process.env.TRUST_PROXY === 'false' ? false : 1,
+    TRUST_PROXY: parseTrustProxy(process.env.TRUST_PROXY),
+    // Số lần /auth/login (và forgot/reset password) tối đa mỗi phút mỗi IP.
+    LOGIN_RATE_LIMIT_MAX: Number(process.env.LOGIN_RATE_LIMIT_MAX) || 5,
 
     db: {
         host: process.env.DB_HOST,
+        port: Number(process.env.DB_PORT) || 3306,
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
         name: process.env.DB_NAME,

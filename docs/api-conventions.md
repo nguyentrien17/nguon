@@ -115,6 +115,11 @@ Tiền tố `/api` lấy từ `API_PREFIX` trong `shared/constants.json`, dùng 
 xoá, và cả hai chiều đều đòi quyền `MOD_USER:delete`. Ghi ở đây để không ai tưởng là xoá.
 Nên chuyển thành `PATCH /api/users/:id/status` ở một đợt có sửa client kèm theo.
 
+**Mọi route có `:id` phải gắn `validateParams(idParamSchema)`.** Không có nó,
+`PUT /api/users/1abc` đi thẳng xuống `where({ id: '1abc' })`, MySQL coerce thành `1` và **sửa
+đúng user id 1**. `validateParams` không gán lại `req.params` (Express 4 định nghĩa nó qua
+getter) mà `Object.assign` từng key đã parse, nên `req.params.id` trở thành number thật.
+
 ## 6. Thứ tự middleware trên một route
 
 Thứ tự này có ý nghĩa, đừng xáo:

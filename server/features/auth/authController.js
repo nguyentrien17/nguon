@@ -3,8 +3,12 @@ const authService = require('./authService');
 const asyncHandler = require('#core/http/asyncHandler');
 const { REFRESH_EXPIRES_IN } = require('#core/security/jwt');
 const env = require('#core/config/env');
+const { API_PREFIX } = require('#shared');
 
 const REFRESH_COOKIE_NAME = authService.REFRESH_COOKIE_NAME;
+// Suy ra từ API_PREFIX thay vì hardcode '/api/auth': đổi prefix mà quên chỗ này thì trình duyệt
+// không gửi cookie tới /auth/refresh nữa và mọi phiên chết sau 15 phút mà không có lỗi nào.
+const REFRESH_COOKIE_PATH = `${API_PREFIX}/auth`;
 
 function setRefreshCookie(res, refreshToken) {
     res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
@@ -12,7 +16,7 @@ function setRefreshCookie(res, refreshToken) {
         secure: env.isProduction,
         sameSite: 'strict',
         maxAge: ms(REFRESH_EXPIRES_IN),
-        path: '/api/auth',
+        path: REFRESH_COOKIE_PATH,
     });
 }
 
@@ -48,7 +52,7 @@ const logout = asyncHandler(async (req, res) => {
     const token = req.cookies?.[REFRESH_COOKIE_NAME];
     await authService.logout({ token, userId: req.user?.id, ip: req.ip });
 
-    res.clearCookie(REFRESH_COOKIE_NAME, { path: '/api/auth' });
+    res.clearCookie(REFRESH_COOKIE_NAME, { path: REFRESH_COOKIE_PATH });
     return res.json({ success: true });
 });
 
@@ -65,7 +69,12 @@ const updateMe = asyncHandler(async (req, res) => {
 
 const changePassword = asyncHandler(async (req, res) => {
     const { currentPassword, newPassword } = req.body;
-    await authService.changePassword(req.user.id, { currentPassword, newPassword, ip: req.ip });
+    await authService.changePassword(req.user.id, {
+        currentPassword,
+        newPassword,
+        currentRefreshToken: req.cookies?.[REFRESH_COOKIE_NAME],
+        ip: req.ip,
+    });
     return res.json({ success: true });
 });
 

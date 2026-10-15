@@ -6,19 +6,40 @@ const { ERROR_CODE } = require('#shared');
  * params { field, reasonKey } — reasonKey là 1 key ngắn (vd 'validation.tooShort') để
  * errorHandler tra bản dịch đúng ngôn ngữ, thay vì message tiếng Anh cố định.
  */
+function toValidationError(zodError) {
+    const firstIssue = zodError.issues[0];
+    const field = firstIssue?.path?.join('.') || '';
+    const reasonKey = firstIssue?.message || 'validation.default';
+    const fallback = field ? `${field}: ${reasonKey}` : reasonKey;
+    return new AppError(400, ERROR_CODE.VALIDATION, fallback, { field, reasonKey });
+}
+
 function validateBody(schema) {
     return (req, res, next) => {
         const result = schema.safeParse(req.body);
         if (!result.success) {
-            const firstIssue = result.error.issues[0];
-            const field = firstIssue?.path?.join('.') || '';
-            const reasonKey = firstIssue?.message || 'validation.default';
-            const fallback = field ? `${field}: ${reasonKey}` : reasonKey;
-            return next(new AppError(400, ERROR_CODE.VALIDATION, fallback, { field, reasonKey }));
+            return next(toValidationError(result.error));
         }
         req.body = result.data;
         next();
     };
 }
 
-module.exports = { validateBody };
+/**
+ * Validate req.params. Khác validateBody ở chỗ KHÔNG ghi lại req.params bằng result.data:
+ * Express 4 định nghĩa req.params qua getter trên prototype của request, gán trực tiếp sẽ
+ * hỏng cho các middleware/route phía sau. Thay vào đó gán từng key đã parse — nhờ vậy
+ * req.params.id trở thành number thật, không còn là string.
+ */
+function validateParams(schema) {
+    return (req, res, next) => {
+        const result = schema.safeParse(req.params);
+        if (!result.success) {
+            return next(toValidationError(result.error));
+        }
+        Object.assign(req.params, result.data);
+        next();
+    };
+}
+
+module.exports = { validateBody, validateParams };

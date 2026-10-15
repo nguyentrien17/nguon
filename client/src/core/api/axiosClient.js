@@ -49,6 +49,19 @@ axiosClient.interceptors.request.use(async (config) => {
 
 let refreshPromise = null;
 
+// MỌI lần gọi /auth/refresh phải đi qua đây. Server rotate refresh token nguyên tử: hai request
+// refresh song song cùng một cookie thì chỉ một cái thành công, cái kia nhận 401 và client sẽ
+// xoá phiên. Gộp về một promise dùng chung để không bao giờ gửi hai request như vậy — kể cả khi
+// React StrictMode chạy effect khởi tạo phiên hai lần ở dev.
+export function refreshSession() {
+    if (!refreshPromise) {
+        refreshPromise = axiosClient.post('/auth/refresh').finally(() => {
+            refreshPromise = null;
+        });
+    }
+    return refreshPromise;
+}
+
 axiosClient.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -62,12 +75,7 @@ axiosClient.interceptors.response.use(
             originalRequest._retry = true;
 
             try {
-                if (!refreshPromise) {
-                    refreshPromise = axiosClient.post('/auth/refresh').finally(() => {
-                        refreshPromise = null;
-                    });
-                }
-                const { data } = await refreshPromise;
+                const { data } = await refreshSession();
                 setAccessToken(data.accessToken);
                 setSigningKey(data.signingKey);
                 originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;

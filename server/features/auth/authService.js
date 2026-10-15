@@ -6,6 +6,7 @@ const refreshTokenModel = require('./refreshTokenModel');
 const passwordResetTokenModel = require('./passwordResetTokenModel');
 const permissionModel = require('#features/permissions/permissionModel');
 const auditLogModel = require('#features/audit-logs/auditLogModel');
+const db = require('#core/database/db');
 const AppError = require('#core/errors/AppError');
 const { buildFieldDiff } = require('#core/utils/auditDiff');
 const { sendPasswordResetEmail } = require('#core/mailer');
@@ -83,13 +84,10 @@ async function login({ username, password, ip }) {
     const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
-        const attempts = user.failed_login_attempts + 1;
-        const shouldLock = attempts >= MAX_FAILED_ATTEMPTS;
-
-        await userModel.recordFailedLogin(user.id, {
-            attempts: shouldLock ? 0 : attempts,
-            lockedUntil: shouldLock ? new Date(Date.now() + LOCK_DURATION_MS) : null,
-        });
+        const attempts = await userModel.incrementFailedLogin(user.id);
+        if (attempts >= MAX_FAILED_ATTEMPTS) {
+            await userModel.lockLogin(user.id, new Date(Date.now() + LOCK_DURATION_MS));
+        }
 
         await auditLogModel.create({ userId: user.id, action: AUDIT_ACTION.LOGIN, ip, status: AUDIT_STATUS.FAILURE, detail: `Bad password (attempt ${attempts})` });
         throw new AppError(401, ERROR_CODE.INVALID_CREDENTIALS, 'Invalid username or password');
@@ -115,12 +113,10 @@ async function refresh({ token }) {
         throw new AppError(401, ERROR_CODE.TOKEN_EXPIRED, 'Refresh token invalid or expired');
     }
 
-    const tokenHash = hashToken(token);
-    const stored = await refreshTokenModel.findValid({ userId: decoded.id, tokenHash });
-    if (!stored) {
+    const consumed = await refreshTokenModel.consume({ userId: decoded.id, tokenHash: hashToken(token) });
+    if (!consumed) {
         throw new AppError(401, ERROR_CODE.TOKEN_EXPIRED, 'Refresh token invalid or revoked');
     }
-    await refreshTokenModel.revokeById(stored.id);
 
     const user = await userModel.findById(decoded.id);
     if (!user || user.status === USER_STATUS.LOCKED) {
@@ -174,7 +170,17 @@ async function updateProfile(userId, { email, full_name, ip }) {
     return getProfile(userId);
 }
 
-async function changePassword(userId, { currentPassword, newPassword, ip }) {
+// Session guard cho core/security/authenticate.js (đăng ký ở server.js): access token chỉ
+// còn hiệu lực khi user còn tồn tại và chưa bị khoá. Thiếu bước này, khoá một tài khoản không
+// có tác dụng gì với access token đã cấp cho tới khi nó hết hạn (JWT_ACCESS_EXPIRES_IN).
+async function isSessionActive(payload) {
+    const user = await userModel.findById(payload.id);
+    return !!user && user.status !== USER_STATUS.LOCKED;
+}
+
+// currentRefreshToken: refresh token (cookie) của chính phiên đang đổi mật khẩu — giữ lại
+// phiên này, thu hồi mọi phiên khác, cùng nguyên tắc với khi admin đổi mật khẩu cho user.
+async function changePassword(userId, { currentPassword, newPassword, currentRefreshToken, ip }) {
     const user = await userModel.findById(userId);
     if (!user) {
         throw new AppError(404, ERROR_CODE.NOT_FOUND, 'User not found');
@@ -188,6 +194,9 @@ async function changePassword(userId, { currentPassword, newPassword, ip }) {
 
     const passwordHash = await bcrypt.hash(newPassword, 12);
     await userModel.update(userId, { password: passwordHash });
+    await refreshTokenModel.revokeAllForUser(userId, {
+        exceptTokenHash: currentRefreshToken ? hashToken(currentRefreshToken) : undefined,
+    });
     await auditLogModel.create({ userId, action: AUDIT_ACTION.PASSWORD_CHANGE, ip, status: AUDIT_STATUS.SUCCESS });
 }
 
@@ -210,26 +219,32 @@ async function requestPasswordReset({ email, ip }) {
 }
 
 async function resetPasswordWithToken({ token, newPassword, ip }) {
-    const tokenHash = hashToken(token);
-    const stored = await passwordResetTokenModel.findValid({ tokenHash });
-    if (!stored) {
-        throw new AppError(400, ERROR_CODE.INVALID_RESET_TOKEN, 'This password reset link is invalid or has expired');
-    }
-
-    const user = await userModel.findById(stored.user_id);
-    if (!user) {
-        throw new AppError(400, ERROR_CODE.INVALID_RESET_TOKEN, 'This password reset link is invalid or has expired');
-    }
-
+    // Hash trước khi mở transaction: bcrypt tốn ~100ms, không nên giữ khoá dòng trong lúc đó.
     const passwordHash = await bcrypt.hash(newPassword, 12);
-    await userModel.update(user.id, { password: passwordHash });
-    await passwordResetTokenModel.markUsed(stored.id);
-    // Reset xong thì mọi phiên đăng nhập cũ (kể cả của kẻ đã chiếm quyền truy cập trước đó)
-    // đều phải đăng nhập lại — vô hiệu toàn bộ refresh token hiện có của user.
-    await passwordResetTokenModel.invalidateAllForUser(user.id);
-    await refreshTokenModel.revokeAllForUser(user.id);
 
-    await auditLogModel.create({ userId: user.id, action: AUDIT_ACTION.PASSWORD_RESET, ip, status: AUDIT_STATUS.SUCCESS });
+    // Dùng token, đổi mật khẩu và thu hồi phiên phải cùng thành/cùng thất bại. Trước đây là
+    // các lệnh rời nhau: lỗi giữa chừng có thể để lại mật khẩu đã đổi mà link reset vẫn dùng
+    // lại được, hoặc phiên cũ chưa bị thu hồi; hai request song song cùng một link cũng đều qua.
+    const userId = await db.transaction(async (trx) => {
+        const stored = await passwordResetTokenModel.consume({ tokenHash: hashToken(token) }, trx);
+        if (!stored) return null;
+
+        const user = await userModel.findById(stored.user_id);
+        if (!user) return null;
+
+        await userModel.update(user.id, { password: passwordHash }, trx);
+        // Reset xong thì mọi phiên đăng nhập cũ (kể cả của kẻ đã chiếm quyền truy cập trước đó)
+        // đều phải đăng nhập lại — vô hiệu toàn bộ refresh token hiện có của user.
+        await passwordResetTokenModel.invalidateAllForUser(user.id, trx);
+        await refreshTokenModel.revokeAllForUser(user.id, { trx });
+        return user.id;
+    });
+
+    if (!userId) {
+        throw new AppError(400, ERROR_CODE.INVALID_RESET_TOKEN, 'This password reset link is invalid or has expired');
+    }
+
+    await auditLogModel.create({ userId, action: AUDIT_ACTION.PASSWORD_RESET, ip, status: AUDIT_STATUS.SUCCESS });
 }
 
 module.exports = {
@@ -238,6 +253,7 @@ module.exports = {
     logout,
     getProfile,
     updateProfile,
+    isSessionActive,
     changePassword,
     requestPasswordReset,
     resetPasswordWithToken,

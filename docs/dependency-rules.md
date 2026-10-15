@@ -60,7 +60,7 @@ Quy tắc 4/5 — các service gọi thẳng model của feature khác:
 | File | Import | Hướng xử lý |
 |---|---|---|
 | `features/auth/authService.js` | `users/userModel`, `permissions/permissionModel`, `audit-logs/auditLogModel` | Chấp nhận. Auth buộc phải đọc bảng users để xác thực; tách qua service sẽ thêm một lớp không mang lại gì. |
-| `features/users/userService.js` | `permissions/permissionModel`, `audit-logs/auditLogModel` | Chấp nhận có điều kiện — xem bên dưới. |
+| `features/users/userService.js` | `permissions/permissionModel`, `audit-logs/auditLogModel`, `auth/refreshTokenModel` | Chấp nhận. `permissionModel` cần cho hai guard bảo mật (`assertCanAssignRoles`, `assertCanTakeOverAccount`); `refreshTokenModel` cần để đổi password thu hồi được phiên đăng nhập — nếu đi qua `authService` thì tạo vòng phụ thuộc vì `authService` đã import `userModel`. |
 | `features/permissions/permissionService.js` | `modules/moduleModel`, `actions/actionModel`, `users/userModel` | Chấp nhận: 3 feature này cùng tạo thành RBAC, dự định gom vào `features/rbac/`. |
 | `features/actions/actionService.js` | `modules/moduleModel`, `permissions/permissionModel` | Như trên. |
 | `features/modules/moduleService.js` | `actions/actionModel`, `actions/actionService` | Như trên. |

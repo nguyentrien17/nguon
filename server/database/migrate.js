@@ -16,6 +16,7 @@ const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
 async function run() {
     const connection = await mysql.createConnection({
         host: env.db.host,
+        port: env.db.port,
         user: env.db.user,
         password: env.db.password,
         database: env.db.name,

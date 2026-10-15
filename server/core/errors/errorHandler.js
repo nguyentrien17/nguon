@@ -11,10 +11,27 @@ function buildMessage(err, locale) {
     return translate(err.errorCode, locale, err.params) || err.message;
 }
 
+// Lỗi do client gửi sai (JSON hỏng, body quá lớn...) mà express.json() ném ra. Chúng mang
+// err.type + err.status của body-parser; không bắt riêng thì rơi xuống nhánh 500 và còn bị
+// log như lỗi server.
+const BODY_PARSER_ERRORS = {
+    'entity.parse.failed': 400,
+    'entity.too.large': 413,
+    'encoding.unsupported': 415,
+    'charset.unsupported': 415,
+    'request.aborted': 400,
+};
+
 // eslint-disable-next-line no-unused-vars
 function errorHandler(err, req, res, next) {
     if (err instanceof AppError) {
         return res.status(err.statusCode).json({ success: false, errorCode: err.errorCode, message: buildMessage(err, req.locale) });
+    }
+
+    const bodyStatus = BODY_PARSER_ERRORS[err.type];
+    if (bodyStatus) {
+        const message = translate(ERROR_CODE.VALIDATION, req.locale) || 'Invalid request body';
+        return res.status(bodyStatus).json({ success: false, errorCode: ERROR_CODE.VALIDATION, message });
     }
 
     // Ngữ cảnh đủ để truy vết (method, url, user) nhưng không log body/header — tránh ghi

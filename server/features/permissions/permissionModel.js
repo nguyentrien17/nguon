@@ -132,8 +132,10 @@ async function updateRole(id, { permission_name, description, details }) {
     });
 }
 
-async function assignRoleToUser({ userId, permissionId }) {
-    await db.raw('INSERT IGNORE INTO user_permissions (user_id, permission_id) VALUES (?, ?)', [userId, permissionId]);
+// trx tuỳ chọn — cho phép caller gộp việc gán role vào cùng transaction với các lệnh khác
+// (userService.createUser tạo user và gán role phải cùng thành/cùng thất bại).
+async function assignRoleToUser({ userId, permissionId }, trx) {
+    await (trx || db).raw('INSERT IGNORE INTO user_permissions (user_id, permission_id) VALUES (?, ?)', [userId, permissionId]);
 }
 
 async function unassignRoleFromUser({ userId, permissionId }) {

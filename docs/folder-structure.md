@@ -1,7 +1,7 @@
 # Cấu trúc thư mục
 
-Mô tả cấu trúc **hiện tại sau đợt refactor đầu**. Phần frontend vẫn ở cấu trúc cũ, xem
-mục "Việc còn tồn đọng".
+Mô tả cấu trúc **hiện tại sau đợt refactor đầu** (cả backend lẫn frontend). Việc chưa làm
+xem mục "Việc còn tồn đọng".
 
 ## Toàn cảnh
 
@@ -22,7 +22,8 @@ mục "Việc còn tồn đọng".
 
 ```
 server/
-├── server.js                 bootstrap: middleware chain, mount routes, listen, graceful shutdown
+├── server.js                 bootstrap: middleware chain, nối session guard (Core ← feature auth),
+│                             mount routes, /health + /health/ready, listen, graceful shutdown
 ├── package.json              alias #shared, #core/*, #features/*
 ├── .env.example
 │
@@ -42,7 +43,7 @@ server/
 │   │   ├── validate.js       validateBody(zodSchema)
 │   │   └── locale.js         đọc header X-Locale → req.locale
 │   ├── security/
-│   │   ├── authenticate.js   verify access token → req.user  (AUTHENTICATION)
+│   │   ├── authenticate.js   verify access token → req.user  (AUTHENTICATION) + setSessionGuard
 │   │   ├── jwt.js            sign/verify access + refresh token
 │   │   ├── verifySignature.js HMAC chữ ký request
 │   │   └── rateLimiter.js    loginLimiter, apiLimiter (theo IP)
@@ -73,9 +74,12 @@ server/
 ├── database/
 │   ├── schema.sql  seed.sql
 │   ├── migrations/           001..010_*.sql, chạy theo thứ tự tên file
+│   │   └── pending/          migration đã viết nhưng CHƯA áp dụng (migrate.js không đọc thư mục con)
 │   └── migrate.js            runner tự viết, tracking ở bảng schema_migrations
 └── tests/
-    └── smoke.load.js         load toàn bộ import graph, không cần DB  (npm run smoke)
+    ├── smoke.load.js         load toàn bộ import graph, không cần DB  (npm run smoke)
+    ├── contract.api.js       contract API mà client phụ thuộc       (npm run test:contract)
+    └── users.security.js     guard bảo mật user/phiên                (npm run test:security)
 ```
 
 ### Alias
@@ -177,12 +181,13 @@ Xếp theo thứ tự nên làm:
    nhập, vào từng trang, thử đổi mật khẩu và để phiên hết hạn một lần.
 2. **Tách `AuthContext`** — hiện gánh cả session, permissions và danh sách modules. Kế hoạch
    refactor (mục 11) khuyên tách, nhưng việc này đổi hành vi render nên để thành đợt riêng.
-3. **Đồng bộ zod** — `server` đang ở `4.5.4` còn root/client ở `4.6.1`, trong khi cả hai
-   bên load cùng một schema trong `shared/validators/`.
+3. ~~**Đồng bộ zod**~~ — đã xong: root/client/server cùng `4.6.1`.
 4. **Gom `features/rbac/`** (backend) — đưa `permissions/`, `modules/`, `actions/` vào một
    thư mục. Đã hoãn có chủ ý: nó sửa `#features/permissions/*` ở 8 file mà không giúp gì cho
    ranh giới Core/Feature, vốn là mục tiêu của đợt đầu.
 5. **`shared/` là CommonJS, client là ESM** — hiện chạy được nhờ Vite interop, sẽ vỡ nếu
    root `package.json` thêm `"type": "module"` hoặc khi dùng `shared/` trong test runner ESM.
-6. **Các tài liệu còn thiếu** trong `docs/`: `coding-conventions.md`,
-   `database-conventions.md`, `security.md`, `testing.md`, `development-guide.md`.
+6. ~~**Các tài liệu còn thiếu**~~ — đã có đủ 9 file trong `docs/` theo mục 5 của kế hoạch.
+7. **ESLint cho server, CI, Dockerfile** — chưa có; xem [testing.md](testing.md) mục 6.
+8. **`.gitattributes`** — repo chưa chuẩn hoá line ending (git cảnh báo LF→CRLF trên hầu hết
+   file). Thêm `* text=auto eol=lf` sẽ renormalize toàn bộ repo, nên làm thành một commit riêng.

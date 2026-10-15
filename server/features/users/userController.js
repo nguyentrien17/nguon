@@ -4,8 +4,10 @@ const asyncHandler = require('#core/http/asyncHandler');
 const { buildUsersWorkbook } = require('./userExport');
 
 const listUsers = asyncHandler(async (req, res) => {
-    const page = Math.max(parseInt(req.query.page) || 1, 1);
-    const limit = Math.min(parseInt(req.query.limit) || 10, 100);
+    // Clamp CẢ HAI biên. Chỉ chặn biên trên là đủ để ?limit=-5 xuống tới knex .limit(-5) và
+    // ném lỗi driver → 500 thay vì 400, đồng thời làm Math.ceil(total / -5) ra số âm.
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
 
     const result = await userService.listUsers({ page, limit, search: req.query.search });
     return res.json({ success: true, ...result });

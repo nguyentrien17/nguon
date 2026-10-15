@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import axiosClient, { setAccessToken, setSigningKey, setOnUnauthorized } from '@/core/api/axiosClient';
+import axiosClient, { setAccessToken, setSigningKey, setOnUnauthorized, refreshSession } from '@/core/api/axiosClient';
 import { useToast } from '@/app/providers/ToastContext';
 
 const AuthContext = createContext(null);
@@ -48,7 +48,7 @@ export function AuthProvider({ children }) {
         // Thử refresh session khi tải lại trang (dựa vào HttpOnly refreshToken cookie)
         (async () => {
             try {
-                const { data } = await axiosClient.post('/auth/refresh');
+                const { data } = await refreshSession();
                 setAccessToken(data.accessToken);
                 setSigningKey(data.signingKey);
                 setUser(data.user);

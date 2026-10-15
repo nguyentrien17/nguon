@@ -4,4 +4,11 @@ const { z } = require('zod');
 // ràng nếu client gửi kèm field lạ, thay vì âm thầm bỏ qua req.body.
 const emptyBodySchema = z.object({}).strict();
 
-module.exports = { emptyBodySchema };
+// Dùng cho mọi route có :id. Không có schema này thì PUT /users/1abc đi thẳng xuống
+// `where({ id: '1abc' })`, MySQL coerce thành 1 và SỬA ĐÚNG user id 1 — xem docs/security.md 9.4.
+// z.coerce vì param trong URL luôn là string.
+const idParamSchema = z.object({
+    id: z.coerce.number('validation.invalidFormat').int('validation.invalidFormat').positive('validation.invalidFormat'),
+});
+
+module.exports = { emptyBodySchema, idParamSchema };

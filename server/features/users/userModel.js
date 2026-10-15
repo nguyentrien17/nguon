@@ -46,23 +46,33 @@ async function listAll({ search }) {
     );
 }
 
-async function create({ username, email, passwordHash, full_name }) {
-    return base.create({ username, email, password: passwordHash, full_name });
+async function create({ username, email, passwordHash, full_name }, trx) {
+    return base.create({ username, email, password: passwordHash, full_name }, trx);
 }
 
 // Chỉ các field trong danh sách này mới được phép ghi qua update() — chặn một field lạ
 // (vd id, username) lọt vào câu UPDATE nếu caller truyền nhầm object.
 const UPDATABLE_FIELDS = ['email', 'full_name', 'avatar', 'password', 'status', 'failed_login_attempts', 'locked_until'];
 
-async function update(id, fields) {
+async function update(id, fields, trx) {
     const filtered = Object.fromEntries(Object.entries(fields).filter(([key]) => UPDATABLE_FIELDS.includes(key)));
-    return base.update(id, filtered);
+    return base.update(id, filtered, trx);
 }
 
 const setStatus = (id, status) => update(id, { status });
 const resetLoginAttempts = (id) => update(id, { failed_login_attempts: 0, locked_until: null });
-const recordFailedLogin = (id, { attempts, lockedUntil }) =>
-    update(id, { failed_login_attempts: attempts, locked_until: lockedUntil });
+
+// Tăng bộ đếm ngay trong DB (failed_login_attempts = failed_login_attempts + 1) thay vì đọc
+// giá trị ở tầng app rồi ghi lại: kiểu đọc-rồi-ghi để N request sai mật khẩu song song cùng
+// ghi "attempts = 1" và không bao giờ chạm ngưỡng khoá. Trả về giá trị SAU khi tăng — mỗi
+// request đọc sau lần tăng của chính nó, nên request làm bộ đếm chạm ngưỡng chắc chắn thấy.
+async function incrementFailedLogin(id) {
+    await db('users').where({ id }).increment('failed_login_attempts', 1);
+    const row = await db('users').where({ id }).first('failed_login_attempts');
+    return row ? Number(row.failed_login_attempts) : 0;
+}
+
+const lockLogin = (id, lockedUntil) => update(id, { failed_login_attempts: 0, locked_until: lockedUntil });
 
 module.exports = {
     findByUsername,
@@ -73,6 +83,7 @@ module.exports = {
     create,
     update,
     setStatus,
-    recordFailedLogin,
+    incrementFailedLogin,
+    lockLogin,
     resetLoginAttempts,
 };

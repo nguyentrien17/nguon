@@ -10,6 +10,9 @@ const PLACEHOLDER_VALUES = [
     'change_this_refresh_secret_in_production',
 ];
 
+// HS256 dùng key 256 bit; secret ngắn hơn 32 ký tự brute-force offline được từ một token bất kỳ.
+const MIN_SECRET_LENGTH = 32;
+
 // Fail-fast lúc khởi động nếu thiếu biến môi trường bắt buộc — tránh trường hợp server
 // vẫn chạy được nhưng vỡ ở request đầu tiên (ví dụ jwt.sign nhận secret undefined).
 function validateEnv() {
@@ -30,12 +33,30 @@ function validateEnv() {
         logger.warn("NODE_ENV chưa được set — mặc định 'development'. Ở production PHẢI set NODE_ENV=production, nếu không cookie refresh token sẽ thiếu cờ Secure.");
     }
 
+    // Secret JWT yếu hoặc dùng chung một giá trị cho access/refresh: ở production thì dừng,
+    // ở môi trường khác chỉ cảnh báo để không chặn việc chạy thử với .env tối giản.
+    const secretProblems = [];
+    for (const key of ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET']) {
+        if (process.env[key].length < MIN_SECRET_LENGTH) {
+            secretProblems.push(`${key} ngắn hơn ${MIN_SECRET_LENGTH} ký tự`);
+        }
+    }
+    if (process.env.JWT_ACCESS_SECRET === process.env.JWT_REFRESH_SECRET) {
+        secretProblems.push('JWT_ACCESS_SECRET trùng JWT_REFRESH_SECRET (refresh token sẽ dùng được như access token)');
+    }
+
     if (process.env.NODE_ENV === 'production') {
         const placeholders = REQUIRED_VARS.filter((key) => PLACEHOLDER_VALUES.includes(process.env[key]));
         if (placeholders.length > 0) {
             logger.error(`Biến môi trường còn giá trị placeholder của .env.example ở production: ${placeholders.join(', ')}`);
             process.exit(1);
         }
+        if (secretProblems.length > 0) {
+            logger.error(`JWT secret không an toàn ở production: ${secretProblems.join('; ')}`);
+            process.exit(1);
+        }
+    } else if (secretProblems.length > 0) {
+        logger.warn(`JWT secret không an toàn (sẽ bị chặn ở production): ${secretProblems.join('; ')}`);
     }
 }
 

@@ -1,9 +1,10 @@
 const rateLimit = require('express-rate-limit');
 const { ERROR_CODE } = require('#shared');
+const env = require('../config/env');
 
 const loginLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 phút
-    max: 5,
+    max: env.LOGIN_RATE_LIMIT_MAX,
     standardHeaders: true,
     legacyHeaders: false,
     message: {
