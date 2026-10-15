@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import axiosClient from '@/core/api/axiosClient';
 import { useToast } from '@/app/providers/ToastContext';
-import Spinner from '@/components/ui/Spinner';
+import { Button, Modal, Spinner } from '@/components/ui';
 import { getErrorMessage } from '@/core/errors/errorMessage';
+import { assignRole, listRoles, listUserRoles, unassignRole } from './userApi';
 
+// Gán / gỡ role cho một user. Mỗi lần tích là một request riêng (không có nút Lưu).
 export default function UserRolesModal({ user, onClose }) {
     const { t } = useTranslation();
     const toast = useToast();
@@ -17,12 +18,9 @@ export default function UserRolesModal({ user, onClose }) {
         (async () => {
             setLoading(true);
             try {
-                const [rolesRes, userRolesRes] = await Promise.all([
-                    axiosClient.get('/permissions'),
-                    axiosClient.get(`/users/${user.id}/roles`),
-                ]);
-                setAllRoles(rolesRes.data.data);
-                setUserRoleIds(new Set(userRolesRes.data.data.map((r) => r.id)));
+                const [rolesRes, userRolesRes] = await Promise.all([listRoles(), listUserRoles(user.id)]);
+                setAllRoles(rolesRes.data);
+                setUserRoleIds(new Set(userRolesRes.data.map((r) => r.id)));
             } catch (err) {
                 toast.error(getErrorMessage(err, t));
             } finally {
@@ -45,13 +43,14 @@ export default function UserRolesModal({ user, onClose }) {
         });
         setPendingId(role.id);
 
+        const params = { role: role.permission_name, user: user.full_name };
         try {
             if (isAssigned) {
-                await axiosClient.delete(`/permissions/${role.id}/assign`, { data: { user_id: user.id } });
-                toast.success(`Removed "${role.permission_name}" from ${user.full_name}`);
+                await unassignRole(role.id, user.id);
+                toast.success(t('users.roleRemoved', params));
             } else {
-                await axiosClient.post(`/permissions/${role.id}/assign`, { user_id: user.id });
-                toast.success(`Assigned "${role.permission_name}" to ${user.full_name}`);
+                await assignRole(role.id, user.id);
+                toast.success(t('users.roleAssigned', params));
             }
         } catch (err) {
             // Rollback on failure
@@ -68,47 +67,43 @@ export default function UserRolesModal({ user, onClose }) {
     };
 
     return (
-        <div className="modal-backdrop" onClick={onClose}>
-            <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-                <h2>Manage roles</h2>
-                <p className="modal-subtitle">{user.full_name}</p>
+        <Modal
+            open
+            title={t('users.manageRoles')}
+            onClose={onClose}
+            footer={
+                <Button variant="primary" onClick={onClose}>
+                    {t('common.close')}
+                </Button>
+            }
+        >
+            <p className="modal-subtitle">{user.full_name}</p>
 
-                {loading ? (
-                    <div className="table-overlay-static">
-                        <Spinner size={22} />
-                    </div>
-                ) : (
-                    <ul className="role-checklist">
-                        {allRoles.map((role) => {
-                            const checked = userRoleIds.has(role.id);
-                            return (
-                                <li key={role.id}>
-                                    <label>
-                                        <input
-                                            type="checkbox"
-                                            checked={checked}
-                                            disabled={pendingId === role.id}
-                                            onChange={() => toggleRole(role)}
-                                        />
-                                        <span>
-                                            {role.permission_name}{' '}
-                                            <span className="role-code">({role.permission_code})</span>
-                                        </span>
-                                        {pendingId === role.id && <Spinner size={14} />}
-                                    </label>
-                                </li>
-                            );
-                        })}
-                        {allRoles.length === 0 && <li className="role-checklist-empty">No roles available</li>}
-                    </ul>
-                )}
-
-                <div className="modal-actions">
-                    <button type="button" className="btn-primary" onClick={onClose}>
-                        {t('common.close')}
-                    </button>
+            {loading ? (
+                <div className="table-overlay-static">
+                    <Spinner size={22} />
                 </div>
-            </div>
-        </div>
+            ) : (
+                <ul className="role-checklist">
+                    {allRoles.map((role) => (
+                        <li key={role.id}>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={userRoleIds.has(role.id)}
+                                    disabled={pendingId === role.id}
+                                    onChange={() => toggleRole(role)}
+                                />
+                                <span>
+                                    {role.permission_name} <span className="role-code">({role.permission_code})</span>
+                                </span>
+                                {pendingId === role.id && <Spinner size={14} />}
+                            </label>
+                        </li>
+                    ))}
+                    {allRoles.length === 0 && <li className="role-checklist-empty">{t('users.noRoles')}</li>}
+                </ul>
+            )}
+        </Modal>
     );
 }

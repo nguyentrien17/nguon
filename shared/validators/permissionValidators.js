@@ -1,31 +1,22 @@
-const { z } = require('zod');
+import { z } from 'zod';
+import { optionalId, optionalText, positiveId, requiredName, upperCode } from './fields.js';
 
 const detailSchema = z.object({
-    module_id: z.number().int().positive(),
-    action_id: z.number().int().positive(),
+    module_id: positiveId,
+    action_id: positiveId,
 });
 
-const createPermissionSchema = z.object({
-    permission_code: z
-        .string()
-        .trim()
-        .min(2, 'validation.tooShort')
-        .max(100)
-        .regex(/^[A-Z0-9_]+$/, 'validation.invalidFormat'),
-    permission_name: z.string().trim().min(1, 'validation.required').max(255),
-    description: z.string().trim().max(500).optional().nullable(),
-    permission_parent_id: z.number().int().positive().optional().nullable(),
+export const createPermissionSchema = z.object({
+    permission_code: upperCode,
+    permission_name: requiredName,
+    description: optionalText(500),
+    permission_parent_id: optionalId,
     details: z.array(detailSchema).optional().default([]),
 });
 
-const updatePermissionSchema = z.object({
-    permission_name: z.string().trim().min(1, 'validation.required').max(255),
-    description: z.string().trim().max(500).optional().nullable(),
-    details: z.array(detailSchema).optional().default([]),
-});
+// Cập nhật: không đổi được mã và role cha.
+export const updatePermissionSchema = createPermissionSchema.omit({ permission_code: true, permission_parent_id: true });
 
-const assignRoleSchema = z.object({
-    user_id: z.number().int().positive(),
+export const assignRoleSchema = z.object({
+    user_id: positiveId,
 });
-
-module.exports = { createPermissionSchema, updatePermissionSchema, assignRoleSchema };

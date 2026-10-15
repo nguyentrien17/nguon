@@ -6,6 +6,9 @@ mang style khác vào.
 ## 1. Ngôn ngữ và định dạng
 
 - **JavaScript, không TypeScript.** Backend CommonJS (`require`), frontend ESM (`import`).
+  `shared/` là ESM (`export const ...`, import nội bộ phải ghi đuôi `.js`); backend vẫn
+  `require('../../../shared/validators/x')` bình thường nhờ `require(esm)` của Node. **Không**
+  dùng top-level `await` trong `shared/` — `require(esm)` không nạp được module như vậy.
 - Thụt lề **4 space**. Nháy đơn cho chuỗi. Có dấu `;` cuối câu.
   Ngoại lệ còn sót: `client/src/main.jsx` và `client/vite.config.js` dùng 2 space và không có
   `;` — là file sinh từ template `create-vite`, chưa ai chỉnh. Đừng lấy chúng làm mẫu.
@@ -122,7 +125,48 @@ try {
   mới thì thêm vào đó theo đúng khuôn `lazy(() => import('@/features/.../X'))`.
 - Lỗi từ API hiển thị qua `getErrorMessage(err, t)` — ưu tiên `message` backend trả về (đã
   đúng ngôn ngữ), chỉ fallback sang bảng dịch client khi không có response.
-- Lỗi zod phía client hiển thị qua `getZodErrorMessage`.
+- Lỗi zod phía client hiển thị qua `getZodErrorMessage` (form dùng `<Form>` thì đã tự xử lý).
+
+### Cách chia file trong một feature
+
+Mẫu: `features/users/`.
+
+```
+features/users/
+├── Users.jsx            TRANG: header, bộ lọc, bảng, phân trang, thao tác trên dòng
+├── UserFormModal.jsx    FORM tạo/sửa trong hộp thoại: khai báo trường, chọn schema, lưu
+├── UserRolesModal.jsx   hộp thoại phụ khác (mỗi hộp thoại một file)
+└── userApi.js           MỌI lời gọi API của feature
+```
+
+- **Component không gọi `axiosClient` trực tiếp** — gọi hàm trong `<feature>Api.js`. Mỗi hàm
+  trả về `res.data` (đúng shape API: `{ data, pagination }`...), lỗi ném nguyên vẹn để caller
+  hiển thị qua `getErrorMessage`. Đổi endpoint chỉ phải sửa một chỗ.
+- **Trang danh sách không chứa form.** Form tạo/sửa là component riêng nhận
+  `{ open, <bản ghi> | null, onClose, onSaved }`; trang chỉ giữ state "đang mở form cho bản
+  ghi nào" và gọi `list.reload()` trong `onSaved`.
+- Form tự tải dữ liệu phụ nó cần (vd danh sách role) **khi mở**, không bắt trang tải sẵn.
+- Endpoint thuộc backend feature khác nhưng feature này cần (vd `/permissions/:id/assign` từ
+  màn Users, `/modules` từ màn Permissions) khai lại trong api của feature này — **không import
+  chéo** `features/a` → `features/b`. Lặp lại một hàm GET một dòng ở hai feature là chấp nhận
+  được; tách chung chỉ khi có logic thật.
+- Logic thuần (không React, không gọi API) mà **nhiều feature** cần (vd dựng cây
+  module/action — `lib/moduleTree.js`) hoặc tiện ích không thuộc feature nào (vd
+  `downloadFile`) đặt ở `lib/`.
+- Logic thuần **của riêng một feature** (lọc cây, tính quyền...) tách thành file `.js` trong
+  feature (vd `permissionTree.js`, `moduleFilter.js`) để component chỉ còn phần hiển thị và để
+  test được không cần DOM.
+- Component lớn được chia theo vai trò, không theo số dòng: trang (state + nối các phần), bảng/
+  cây hiển thị, từng hộp thoại form, panel phụ. Xem `features/module-actions/` và
+  `features/permissions/`.
+- Form tạo/sửa trong hộp thoại dùng `<FormModal>`; form nhiều tab hoặc bố cục đặc biệt dùng
+  `useForm` + `<Field>` (vd `RoleFormModal`).
+- Trang chưa đăng nhập (`features/auth/`) dùng chung khung `AuthLayout` và giữ giao diện riêng
+  (ô nhập có icon), không dùng `<Form>`.
+
+Hiện trạng: **mọi** component trong `features/` đã gọi API qua `<feature>Api.js` — chỉ còn
+`core/auth/AuthContext.jsx` và `core/api/axiosClient.js` (hạ tầng phiên) dùng `axiosClient`
+trực tiếp.
 
 ## 5. Validation
 
@@ -139,7 +183,37 @@ Message trong schema là **khoá dịch**, không phải câu tiếng Anh:
 z.string().min(8, 'validation.tooShort')
 ```
 
-`validateBody` lấy issue đầu tiên và chuyển thành `AppError` với `params.reasonKey`, để
+### Viết schema mới — không chép lại quy tắc
+
+1. **Dùng "viên gạch" trong `shared/validators/fields.js`** thay vì viết lại chuỗi
+   `z.string().trim()...`: `requiredName`, `optionalText(max)`, `upperCode`, `lowerCode`,
+   `email`, `positiveId`, `optionalId`, `recordStatus`, `atLeastOneField(schema)`. Mỗi quy tắc
+   chỉ định nghĩa một lần, luôn kèm key dịch. Cần quy tắc mới dùng ở ≥ 2 schema thì thêm vào
+   `fields.js`; quy tắc chỉ một nơi dùng thì viết tại chỗ.
+2. **Suy schema cập nhật từ schema tạo mới** bằng `.pick` / `.omit` / `.partial` / `.extend`,
+   không chép lại từng trường:
+   ```js
+   export const updateModuleSchema = createModuleSchema
+       .omit({ module_code: true, module_parent_id: true })   // không cho đổi
+       .extend({ status: recordStatus.optional() });            // chỉ khi cập nhật mới có
+   export const updateUserSchema = atLeastOneField(
+       createUserSchema.pick({ email: true, full_name: true }).partial().extend({ ... })
+   );
+   ```
+   Thêm trường vào schema tạo mới thì schema cập nhật tự có theo (trừ khi bị `omit`).
+3. `.pick` / `.omit` / `.extend` chỉ dùng được **trước** `.refine(...)` — vì vậy
+   `atLeastOneField` bọc ở ngoài cùng.
+4. Import nội bộ trong `shared/` phải ghi đuôi `.js` (`from './fields.js'`) — `shared/` là ESM.
+
+### Từ issue zod tới thông báo
+
+`shared/validators/issueKey.js` (`zodIssueKey`) đổi một issue zod thành key `validation.*` —
+**dùng chung** cho `validateBody` ở server và form ở client. Nó lo cả các lỗi zod tự sinh câu
+tiếng Anh (sai kiểu: gửi `null` / số thay vì chuỗi, thiếu trường, số ngoài khoảng...), nên dù
+schema có quên message thì người dùng vẫn không thấy câu tiếng Anh. Test chặn hồi quy:
+`server/tests/unit/validate.test.js` ("mọi lỗi validate đều ra key dịch").
+
+`validateBody` lấy issue đầu tiên, đổi qua `zodIssueKey` thành `params.reasonKey`, để
 `errorHandler` tra bản dịch theo `X-Locale`.
 
 **Validator không thay cho kiểm tra quyền hay quy tắc nghiệp vụ.** `createUserSchema` xác nhận

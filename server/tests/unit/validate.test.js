@@ -39,6 +39,32 @@ describe('validateBody', () => {
     });
 });
 
+describe('mọi lỗi validate đều ra key dịch (không lọt câu tiếng Anh của zod)', () => {
+    const { createModuleSchema } = require('../../../shared/validators/moduleValidators');
+    const { createActionSchema } = require('../../../shared/validators/actionValidators');
+    const { createPermissionSchema } = require('../../../shared/validators/permissionValidators');
+
+    const cases = [
+        ['chuỗi gửi null', createUserSchema, { username: 'alice', email: 'a@b.co', password: 'Passw0rd1', full_name: null }],
+        ['chuỗi gửi số', createUserSchema, { username: 'alice', email: 'a@b.co', password: 'Passw0rd1', full_name: 123 }],
+        ['thiếu trường', createUserSchema, { username: 'alice', email: 'a@b.co', password: 'Passw0rd1' }],
+        ['tên quá dài', createModuleSchema, { module_code: 'MOD_X', module_name: 'x'.repeat(256) }],
+        ['đường dẫn quá dài', createModuleSchema, { module_code: 'MOD_X', module_name: 'X', module_href: 'x'.repeat(256) }],
+        ['số nguyên gửi chuỗi', createActionSchema, { module_id: '1', action_code: 'view', action_name: 'Xem' }],
+        ['số ngoài khoảng', createModuleSchema, { module_code: 'MOD_X', module_name: 'X', module_type: 9 }],
+        ['mảng gửi null', createPermissionSchema, { permission_code: 'ROLE_X', permission_name: 'X', details: null }],
+        ['trường lạ ở body rỗng', emptyBodySchema, { x: 1 }],
+    ];
+
+    for (const [name, schema, body] of cases) {
+        test(name, async () => {
+            const { nextArg } = await runMiddleware(validateBody(schema), mockReq({ body }));
+            assert.ok(nextArg instanceof AppError, 'phải bị từ chối');
+            assert.match(nextArg.params.reasonKey, /^validation\./, `reasonKey thô: ${nextArg.params.reasonKey}`);
+        });
+    }
+});
+
 describe('validateParams + idParamSchema', () => {
     test('"42" -> số 42', async () => {
         const req = mockReq({ params: { id: '42' } });

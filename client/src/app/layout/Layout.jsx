@@ -1,9 +1,11 @@
-import { useState } from 'react';
-import { Outlet, Link } from 'react-router-dom';
+import { Suspense, useState } from 'react';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LogOut, Menu } from 'lucide-react';
 import Sidebar from './Sidebar';
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
+import Spinner from '@/components/ui/Spinner';
+import ErrorBoundary from '@/core/errors/ErrorBoundary';
 import { useAuth } from '@/core/auth/AuthContext';
 
 function initials(name = '') {
@@ -18,6 +20,7 @@ function initials(name = '') {
 export default function Layout() {
     const { t } = useTranslation();
     const { user, logout } = useAuth();
+    const { pathname } = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
@@ -31,7 +34,8 @@ export default function Layout() {
                         type="button"
                         className="menu-toggle"
                         onClick={() => setSidebarOpen((s) => !s)}
-                        aria-label="Toggle menu"
+                        aria-label={t('common.toggleMenu')}
+                        aria-expanded={sidebarOpen}
                     >
                         <Menu size={20} />
                     </button>
@@ -43,14 +47,26 @@ export default function Layout() {
                                 <span className="avatar-circle">{initials(user?.full_name)}</span>
                                 <span className="app-user-name">{user?.full_name}</span>
                             </Link>
-                            <button type="button" onClick={logout} title={t('nav.logout')}>
+                            <button type="button" onClick={logout} title={t('nav.logout')} aria-label={t('nav.logout')}>
                                 <LogOut size={18} />
                             </button>
                         </div>
                     </div>
                 </header>
                 <main className="app-content">
-                    <Outlet />
+                    {/* Boundary + Suspense riêng cho nội dung trang: một trang lỗi hoặc đang tải
+                        chunk không làm mất menu/topbar; chuyển sang trang khác là tự hồi phục. */}
+                    <ErrorBoundary resetKey={pathname}>
+                        <Suspense
+                            fallback={
+                                <div className="route-fallback">
+                                    <Spinner size={28} />
+                                </div>
+                            }
+                        >
+                            <Outlet />
+                        </Suspense>
+                    </ErrorBoundary>
                 </main>
             </div>
         </div>

@@ -2,8 +2,8 @@
 
 ## 1. Hiện trạng — đọc trước khi tin
 
-Unit test dùng **`node:test`** có sẵn trong Node — không thêm dependency nào (mục 14 của kế
-hoạch). Test tích hợp là script Node thuần gọi API thật.
+Server: unit test dùng **`node:test`** có sẵn trong Node; test tích hợp là script Node thuần gọi
+API thật. Client: **vitest** + Testing Library.
 
 | Lệnh | Ở đâu | Cần gì | Kiểm tra gì |
 |---|---|---|---|
@@ -14,8 +14,43 @@ hoạch). Test tích hợp là script Node thuần gọi API thật.
 | `npm run test:security` | `server/tests/users.security.js` | **cần** server đang chạy + MySQL | 27 assertion về guard chống chiếm/khoá tài khoản đặc quyền, thu hồi phiên khi đổi password/khoá user, refresh song song, bộ đếm đăng nhập sai nguyên tử, JSON hỏng → 400, validate `:id`, clamp `limit`, rollback transaction |
 | `npm run lint` | `client/` | — | eslint toàn bộ `client/src` |
 | `npm run build` | `client/` | — | Vite build, bắt lỗi import/alias |
+| `npm test` | `client/src/**/*.test.{js,jsx}` | **không** cần server | 69 test vitest + Testing Library (jsdom), xem mục 1c |
 
-**Không có:** test cho migration, test cho UI, CI.
+**Không có:** test cho migration, test end-to-end trên trình duyệt thật, CI.
+
+## 1c. `client: npm test` — test giao diện
+
+```bash
+cd client && npm test          # chạy một lần
+cd client && npm run test:watch
+```
+
+69 test, ~6 giây. File test đặt **cạnh file được test** (`Form.jsx` ↔ `Form.test.jsx`).
+Hạ tầng trong `client/src/test/`:
+
+- `setup.js` — jest-dom matcher, ngôn ngữ cố định `vi`, dọn DOM/localStorage sau mỗi test.
+- `render.jsx` — `renderWithProviders(ui)`: bọc Router + ToastProvider. **Không** bọc
+  AuthProvider (nó gọi API khôi phục phiên) — test cần `useAuth` thì `vi.mock('@/core/auth/AuthContext')`.
+- `i18nLabel.js` — `label('users.form.emailLabel')`: tìm ô nhập theo key i18n thay vì chép chữ
+  tiếng Việt vào test (đổi bản dịch không làm vỡ test).
+
+API của feature được mock ở mức `<feature>Api.js` (`vi.mock('./userApi')`) — test kiểm tra
+**payload gửi đi**, không cần server.
+
+Đang phủ:
+
+| Nhóm | Test |
+|---|---|
+| Logic thuần | `validateForm` với schema thật trong `shared/`, cây quyền (`permissionTree`), lọc cây module, `canOpenModule`, phân trang, dịch mã lỗi / issue zod, `lazyWithRetry` |
+| Tương tác | `<Form>`: lỗi dưới từng ô, focus ô lỗi, normalize, lỗi API -> toast, upload file quá lớn / bỏ file; `<FormModal>`: Escape không đóng khi đang lưu; `usePagedList`: race giữa các trang, bộ lọc |
+| Điều hướng | `ProtectedRoute`: chuyển sang /login **kèm** trang đang mở, spinner khi khôi phục phiên; `Sidebar`: ẩn module không mở được |
+| Form nghiệp vụ | `UserFormModal` (payload tạo/sửa, không gửi mật khẩu trống, chỉ tải role khi có quyền), `RoleFormModal` (tự về tab có lỗi, xoá mô tả -> `null`), `ModuleFormModal` / `ActionFormModal` (viết hoa/thường mã, xoá đường dẫn / giới hạn -> `null`) |
+
+Đã kiểm chứng test bắt lỗi thật bằng cách cố ý làm hỏng code: bỏ `state` trong ProtectedRoute
+-> đúng test "quay lại trang cũ" fail; bỏ `?? null` khi sửa role -> đúng test "xoá mô tả" fail.
+
+Chưa phủ: các trang danh sách đầy đủ (Users, Permissions, ModuleActions) ở mức toàn trang,
+Login / quên / đặt lại mật khẩu, LanguageSwitcher.
 
 ## 1b. `npm test` — unit test
 
@@ -108,7 +143,7 @@ Còn một lệnh grep, nên đưa vào CI khi có CI:
 
 ```bash
 # Shared chỉ được phụ thuộc zod — phải không có output
-grep -rn "require(" shared/ | grep -v "require('zod')" | grep -v "require('\./"
+grep -rn "^import " shared/ | grep -v "from 'zod'" | grep -v "from '\./"
 ```
 
 ## 5. Việc chưa làm được tự động — phải kiểm tra bằng tay
@@ -177,8 +212,8 @@ Theo mục 13 của kế hoạch refactor, làm từng bước, không viết th
 7. ⬜ Test migration trên database thử nghiệm
 8. ✅ Lint cho server — ⬜ CI
 
-Framework đã chọn **node:test** thay vì vitest: có sẵn trong Node, không thêm dependency, server
-là CommonJS nên không hưởng lợi gì từ cấu hình Vite.
+Server dùng **node:test** (có sẵn trong Node, server là CommonJS nên không hưởng lợi gì từ cấu
+hình Vite). Client dùng **vitest** (dùng chung cấu hình Vite: alias `@`, `@shared`, plugin React).
 
 ## 7. Quy tắc báo cáo kết quả test
 

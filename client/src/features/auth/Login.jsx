@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Eye, EyeOff, ShieldCheck, User, Lock } from 'lucide-react';
+import { Eye, EyeOff, User, Lock } from 'lucide-react';
 import { useAuth } from '@/core/auth/AuthContext';
 import { useToast } from '@/app/providers/ToastContext';
-import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 import Spinner from '@/components/ui/Spinner';
 import { loginSchema } from '@shared/validators/authValidators';
 import { getZodErrorMessage } from '@/core/errors/zodErrorMessage';
+import { translateErrorCode } from '@/core/errors/errorMessage';
+import AuthLayout from './AuthLayout';
 
 export default function Login() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { login } = useAuth();
     const toast = useToast();
     const navigate = useNavigate();
@@ -36,7 +37,9 @@ export default function Login() {
         try {
             const data = await login(username, password);
             toast.success(`${t('dashboard.welcome', { name: data.user.full_name })}`);
-            const redirectTo = location.state?.from?.pathname || '/dashboard';
+            // ProtectedRoute gửi kèm trang người dùng đang định mở trước khi bị chuyển sang /login.
+            const from = location.state?.from;
+            const redirectTo = from?.pathname && from.pathname !== '/login' ? `${from.pathname}${from.search || ''}` : '/dashboard';
             navigate(redirectTo, { replace: true });
         } catch (err) {
             const code = err.response?.data?.errorCode || 'ERR_UNKNOWN';
@@ -47,79 +50,67 @@ export default function Login() {
     };
 
     return (
-        <div className="login-page">
-            <div className="login-shell">
-                <div className="login-topbar">
-                    <div className="login-logo">
-                        <ShieldCheck size={22} />
-                        <span>{t('app.title')}</span>
-                    </div>
-                    <LanguageSwitcher />
+        <AuthLayout heroTitle={t('login.heroTitle')} heroSubtitle={t('login.heroSubtitle')}>
+            <form className="login-panel-form" onSubmit={handleSubmit} noValidate>
+                <h2>{t('login.formTitle')}</h2>
+                <p className="login-form-subtitle">{t('login.title')}</p>
+
+                {/* Lưu MÃ lỗi (không lưu câu) để đổi ngôn ngữ thì thông báo đổi theo. */}
+            {errorCode && (
+                <div className="alert-error" role="alert">
+                    {translateErrorCode(errorCode, i18n.resolvedLanguage)}
                 </div>
+            )}
 
-                <div className="login-panels">
-                    <div className="login-panel-hero">
-                        <h1>{t('login.heroTitle')}</h1>
-                        <p>{t('login.heroSubtitle')}</p>
+                <label className="login-field">
+                    <span className="sr-only">{t('login.username')}</span>
+                    <div className="input-with-icon">
+                        <User size={16} className="input-icon-static" />
+                        <input
+                            type="text"
+                            placeholder={t('login.username')}
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            autoComplete="username"
+                            autoFocus
+                            required
+                        />
                     </div>
+                </label>
 
-                    <form className="login-panel-form" onSubmit={handleSubmit} noValidate>
-                        <h2>{t('login.formTitle')}</h2>
-                        <p className="login-form-subtitle">{t('login.title')}</p>
-
-                        {errorCode && <div className="alert-error">{t(`errors.${errorCode}`)}</div>}
-
-                        <label className="login-field">
-                            <span className="sr-only">{t('login.username')}</span>
-                            <div className="input-with-icon">
-                                <User size={16} className="input-icon-static" />
-                                <input
-                                    type="text"
-                                    placeholder={t('login.username')}
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    autoComplete="username"
-                                    autoFocus
-                                    required
-                                />
-                            </div>
-                        </label>
-
-                        <label className="login-field">
-                            <span className="sr-only">{t('login.password')}</span>
-                            <div className="input-with-icon">
-                                <Lock size={16} className="input-icon-static" />
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    placeholder={t('login.password')}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    autoComplete="current-password"
-                                    required
-                                />
-                                <button
-                                    type="button"
-                                    className="input-icon-btn"
-                                    onClick={() => setShowPassword((s) => !s)}
-                                    tabIndex={-1}
-                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                                >
-                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                </button>
-                            </div>
-                        </label>
-
-                        <Link to="/forgot-password" className="login-forgot-link">
-                            {t('login.forgotPassword')}
-                        </Link>
-
-                        <button type="submit" disabled={submitting} className="btn-submit">
-                            {submitting && <Spinner size={16} />}
-                            {submitting ? t('login.loading') : t('login.submit')}
+                <label className="login-field">
+                    <span className="sr-only">{t('login.password')}</span>
+                    <div className="input-with-icon">
+                        <Lock size={16} className="input-icon-static" />
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder={t('login.password')}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            autoComplete="current-password"
+                            required
+                        />
+                        <button
+                            type="button"
+                            className="input-icon-btn"
+                            onClick={() => setShowPassword((s) => !s)}
+                            tabIndex={-1}
+                            aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
+                        >
+                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
-                    </form>
-                </div>
-            </div>
-        </div>
+                    </div>
+                </label>
+
+                <Link to="/forgot-password" className="login-forgot-link">
+                    {t('login.forgotPassword')}
+                </Link>
+
+                <button type="submit" disabled={submitting} className="btn-submit">
+                    {submitting && <Spinner size={16} />}
+                    {submitting ? t('login.loading') : t('login.submit')}
+                </button>
+            </form>
+        </AuthLayout>
     );
 }

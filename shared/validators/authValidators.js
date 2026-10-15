@@ -1,30 +1,25 @@
-const { z } = require('zod');
-const { passwordSchema } = require('./userValidators');
+import { z } from 'zod';
+import { atLeastOneField, email } from './fields.js';
+import { createUserSchema, passwordSchema } from './userValidators.js';
 
-const loginSchema = z.object({
+// Đăng nhập: chỉ kiểm tra không rỗng (không giới hạn độ dài / định dạng — sai thì server trả
+// "sai tên đăng nhập hoặc mật khẩu", không lộ quy tắc). Mật khẩu KHÔNG trim.
+export const loginSchema = z.object({
     username: z.string().trim().min(1, 'validation.required'),
     password: z.string().min(1, 'validation.required'),
 });
 
-const updateProfileSchema = z
-    .object({
-        email: z.string().trim().email('validation.invalidFormat').optional(),
-        full_name: z.string().trim().min(1).max(255).optional(),
-    })
-    .refine((data) => Object.keys(data).length > 0, { message: 'validation.noFieldsToUpdate' });
+// Tự sửa hồ sơ: cùng quy tắc email / full_name với quản lý user.
+export const updateProfileSchema = atLeastOneField(createUserSchema.pick({ email: true, full_name: true }).partial());
 
-const changePasswordSchema = z.object({
+export const changePasswordSchema = z.object({
     currentPassword: z.string().min(1, 'validation.required'),
     newPassword: passwordSchema,
 });
 
-const forgotPasswordSchema = z.object({
-    email: z.string().trim().email('validation.invalidFormat'),
-});
+export const forgotPasswordSchema = z.object({ email });
 
-const resetPasswordSchema = z.object({
+export const resetPasswordSchema = z.object({
     token: z.string().min(1, 'validation.required'),
     newPassword: passwordSchema,
 });
-
-module.exports = { loginSchema, updateProfileSchema, changePasswordSchema, forgotPasswordSchema, resetPasswordSchema };

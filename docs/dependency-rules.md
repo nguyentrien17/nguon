@@ -43,7 +43,7 @@ Mọi mũi tên ngược đều là lỗi. Cụ thể, **không** được có:
 grep -rnE "require\(['\"](#features/|\.\./)*features/" server/core/ && echo "VI PHAM" || echo "PASS"
 
 # Quy tắc 2 — phải không có output nào ngoài 'zod' và đường dẫn nội bộ ./
-grep -rn "require(" shared/ | grep -v "require('zod')" | grep -v "require('\./"
+grep -rn "^import " shared/ | grep -v "from 'zod'" | grep -v "from '\./"
 ```
 
 Hai lệnh này nên được thêm vào CI khi có CI. Chúng rẻ và bắt được đúng loại lỗi mà

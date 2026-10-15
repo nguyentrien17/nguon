@@ -1,0 +1,214 @@
+/*
+ * Style bổ sung cho components/ui. Các class đã có từ trước (btn-primary/secondary/danger,
+ * badge-*, data-table, pagination, modal-*, toast-*) vẫn nằm trong app/App.css — file này chỉ
+ * thêm phần MỚI, để giao diện các trang cũ không đổi.
+ */
+
+/* ---------- Button ---------- */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+.btn-ghost:hover {
+  background: #f3f4f6;
+}
+.btn-ghost:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.btn-primary.btn-sm,
+.btn-secondary.btn-sm,
+.btn-danger.btn-sm,
+.btn-ghost.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.btn-danger .spinner {
+  border-color: rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+}
+
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-danger:focus-visible,
+.btn-ghost:focus-visible,
+.icon-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ---------- IconButton (giống .actions-cell button, dùng được ở mọi nơi) ---------- */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: #f3f4f6;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-text);
+}
+.icon-btn:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+.icon-btn-danger:hover:not(:disabled) {
+  background: #fee2e2;
+  color: var(--color-danger);
+}
+.icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Badge ---------- */
+.badge-info {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+.badge-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* ---------- Alert ---------- */
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+.alert-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.alert-body {
+  flex: 1;
+  min-width: 0;
+}
+.alert-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.alert-dismiss {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+  display: flex;
+}
+.alert-dismiss:hover {
+  opacity: 1;
+}
+/* Tiền tố alert-tone-*: tránh đụng .alert-error có sẵn trong App.css (thông báo ở trang đăng nhập). */
+.alert-tone-info {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  color: #3730a3;
+}
+.alert-tone-success {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+.alert-tone-warning {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+.alert-tone-error {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+/* ---------- Pagination ---------- */
+.pagination {
+  align-items: center;
+}
+.pagination button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+}
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pagination-ellipsis {
+  padding: 0 4px;
+  color: var(--color-text-muted);
+}
+.pagination-total {
+  margin-left: 8px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Tabs (trước đây là .perm-tabs trong App.css, chỉ Permissions dùng) ---------- */
+.tabs {
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 14px;
+}
+
+.tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: none;
+  padding: 8px 2px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tabs button.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.tabs-badge {
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+}
+
+/* ---------- Toast ---------- */
+.toast-warning {
+  background: #78350f;
+}

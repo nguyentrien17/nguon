@@ -1,16 +1,33 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import axiosClient, { setAccessToken, setSigningKey, setOnUnauthorized, refreshSession } from '@/core/api/axiosClient';
+import { useTranslation } from 'react-i18next';
+import axiosClient, { setAccessToken, setSigningKey, setOnUnauthorized, setOnPermissionDenied, refreshSession } from '@/core/api/axiosClient';
+import { canOpenModule as canOpenModuleRule } from '@/core/permissions/moduleAccess';
 import { useToast } from '@/app/providers/ToastContext';
 
 const AuthContext = createContext(null);
 
+// Đồng bộ quyền không quá 1 lần / 30 giây (nhiều request 403 cùng lúc chỉ kích hoạt một lần);
+// quay lại tab sau hơn 5 phút thì tự đồng bộ.
+const SYNC_THROTTLE_MS = 30 * 1000;
+const STALE_AFTER_MS = 5 * 60 * 1000;
+
 export function AuthProvider({ children }) {
+    const { t } = useTranslation();
     const [user, setUser] = useState(null);
     const [permissions, setPermissions] = useState([]);
     const [modules, setModules] = useState([]);
     const [loading, setLoading] = useState(true);
     const toast = useToast();
     const wasAuthenticated = useRef(false);
+    const lastSyncAt = useRef(0);
+
+    const applySession = useCallback((data) => {
+        setAccessToken(data.accessToken);
+        setSigningKey(data.signingKey);
+        setUser((prev) => ({ ...prev, ...data.user }));
+        setPermissions(data.permissions);
+        lastSyncAt.current = Date.now();
+    }, []);
 
     const clearSession = useCallback(() => {
         setAccessToken(null);
@@ -20,55 +37,78 @@ export function AuthProvider({ children }) {
         setModules([]);
     }, []);
 
+    // Quyền nằm trong payload login/refresh, nên đổi role của user đang đăng nhập không tự phản
+    // ánh lên giao diện. Gọi refresh để lấy danh sách quyền mới (refreshSession gộp các lời gọi
+    // song song). Lỗi ở đây không xoá phiên — interceptor của axiosClient lo việc đó.
+    const syncPermissions = useCallback(async () => {
+        if (Date.now() - lastSyncAt.current < SYNC_THROTTLE_MS) return;
+        lastSyncAt.current = Date.now();
+        try {
+            const { data } = await refreshSession();
+            applySession(data);
+        } catch {
+            /* giữ phiên hiện tại */
+        }
+    }, [applySession]);
+
     useEffect(() => {
         setOnUnauthorized(() => {
             if (wasAuthenticated.current) {
-                toast.info('Your session has expired. Please sign in again.');
+                toast.info(t('common.sessionExpired'));
             }
             clearSession();
         });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [clearSession]);
+        setOnPermissionDenied(() => {
+            if (wasAuthenticated.current) syncPermissions();
+        });
+    }, [clearSession, syncPermissions, toast, t]);
+
+    useEffect(() => {
+        const onFocus = () => {
+            if (wasAuthenticated.current && Date.now() - lastSyncAt.current > STALE_AFTER_MS) syncPermissions();
+        };
+        window.addEventListener('focus', onFocus);
+        return () => window.removeEventListener('focus', onFocus);
+    }, [syncPermissions]);
 
     useEffect(() => {
         wasAuthenticated.current = !!user;
     }, [user]);
 
     // Modules được nạp riêng (không phải từ payload login/refresh) vì cần cho mọi trang có
-    // dùng ActionGuard elementId={...}, không chỉ Sidebar — nạp lại mỗi khi có user mới.
+    // dùng ActionGuard elementId={...} và cho Sidebar — nạp lại mỗi khi có user mới.
+    const userId = user?.id;
     useEffect(() => {
-        if (!user) return;
+        if (!userId) return;
         axiosClient
             .get('/modules')
             .then(({ data }) => setModules(data.data))
             .catch(() => setModules([]));
-    }, [user]);
+    }, [userId]);
 
     useEffect(() => {
-        // Thử refresh session khi tải lại trang (dựa vào HttpOnly refreshToken cookie)
+        // Thử khôi phục phiên khi tải lại trang (dựa vào HttpOnly refreshToken cookie)
         (async () => {
             try {
                 const { data } = await refreshSession();
-                setAccessToken(data.accessToken);
-                setSigningKey(data.signingKey);
-                setUser(data.user);
-                setPermissions(data.permissions);
+                applySession(data);
             } catch {
                 clearSession();
             } finally {
                 setLoading(false);
             }
         })();
-    }, [clearSession]);
+    }, [applySession, clearSession]);
 
-    const login = useCallback(async (username, password) => {
-        const { data } = await axiosClient.post('/auth/login', { username, password });
-        setAccessToken(data.accessToken);
-        setSigningKey(data.signingKey);
-        setUser(data.user);
-        setPermissions(data.permissions);
-        return data;
-    }, []);
+    const login = useCallback(
+        async (username, password) => {
+            const { data } = await axiosClient.post('/auth/login', { username, password });
+            setUser(null); // phiên mới: không gộp với user của phiên trước
+            applySession(data);
+            return data;
+        },
+        [applySession]
+    );
 
     const logout = useCallback(async () => {
         try {
@@ -79,18 +119,13 @@ export function AuthProvider({ children }) {
     }, [clearSession]);
 
     const can = useCallback(
-        (moduleCode, actionCode) =>
-            permissions.some((p) => p.module_code === moduleCode && p.action_code === actionCode),
+        (moduleCode, actionCode) => permissions.some((p) => p.module_code === moduleCode && p.action_code === actionCode),
         [permissions]
     );
 
-    // True if the user has been granted ANY action on this module — used to decide sidebar
-    // visibility so a module isn't hidden just because its "view-equivalent" action isn't
-    // literally coded 'view' (custom action codes are allowed when creating actions).
-    const canAccessModule = useCallback(
-        (moduleCode) => permissions.some((p) => p.module_code === moduleCode),
-        [permissions]
-    );
+    // Có mở được module không — cùng một quy tắc cho Sidebar và ProtectedRoute
+    // (core/permissions/moduleAccess.js).
+    const canOpenModule = useCallback((moduleCode) => canOpenModuleRule(moduleCode, permissions), [permissions]);
 
     const refreshProfile = useCallback(async () => {
         const { data } = await axiosClient.get('/auth/me');
@@ -117,9 +152,10 @@ export function AuthProvider({ children }) {
                 login,
                 logout,
                 can,
-                canAccessModule,
+                canOpenModule,
                 getModuleByElementId,
                 refreshProfile,
+                syncPermissions,
                 isAuthenticated: !!user,
             }}
         >

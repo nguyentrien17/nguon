@@ -1,21 +1,22 @@
-import { lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from '@/core/permissions/ProtectedRoute';
 import Layout from '@/app/layout/Layout';
 import { MODULE_CODE } from '@shared/constants.json';
+import lazyWithRetry from './lazyWithRetry';
 
 // Lazy-load từng trang theo route để bundle không dồn hết vào 1 chunk lớn tải ngay lúc đầu
-// (mỗi trang chỉ tải khi người dùng thực sự vào route đó).
-const Login = lazy(() => import('@/features/auth/Login'));
-const ForgotPassword = lazy(() => import('@/features/auth/ForgotPassword'));
-const ResetPassword = lazy(() => import('@/features/auth/ResetPassword'));
-const Dashboard = lazy(() => import('@/features/dashboard/Dashboard'));
-const Users = lazy(() => import('@/features/users/Users'));
-const Permissions = lazy(() => import('@/features/permissions/Permissions'));
-const AuditLogs = lazy(() => import('@/features/audit-logs/AuditLogs'));
-const ModuleActions = lazy(() => import('@/features/module-actions/ModuleActions'));
-const Profile = lazy(() => import('@/features/profile/Profile'));
-const NotFound = lazy(() => import('@/app/NotFound'));
+// (mỗi trang chỉ tải khi người dùng thực sự vào route đó). lazyWithRetry: tự tải lại trang một
+// lần nếu chunk cũ đã bị xoá sau khi deploy.
+const Login = lazyWithRetry(() => import('@/features/auth/Login'));
+const ForgotPassword = lazyWithRetry(() => import('@/features/auth/ForgotPassword'));
+const ResetPassword = lazyWithRetry(() => import('@/features/auth/ResetPassword'));
+const Dashboard = lazyWithRetry(() => import('@/features/dashboard/Dashboard'));
+const Users = lazyWithRetry(() => import('@/features/users/Users'));
+const Permissions = lazyWithRetry(() => import('@/features/permissions/Permissions'));
+const AuditLogs = lazyWithRetry(() => import('@/features/audit-logs/AuditLogs'));
+const ModuleActions = lazyWithRetry(() => import('@/features/module-actions/ModuleActions'));
+const Profile = lazyWithRetry(() => import('@/features/profile/Profile'));
+const NotFound = lazyWithRetry(() => import('@/app/NotFound'));
 
 // Chỉ chứa bảng route. Providers và Suspense nằm ở app/App.jsx — tách ra để thêm/bớt một
 // route không phải chạm vào phần khởi tạo ứng dụng, và ngược lại.
@@ -35,6 +36,7 @@ export default function AppRoutes() {
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/profile" element={<Profile />} />
 
+                    {/* moduleCode ở đây phải nằm trong ROUTE_GUARDED_MODULES (core/permissions/moduleAccess.js). */}
                     <Route element={<ProtectedRoute moduleCode={MODULE_CODE.USER} />}>
                         <Route path="/users" element={<Users />} />
                     </Route>

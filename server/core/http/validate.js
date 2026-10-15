@@ -1,5 +1,8 @@
 const AppError = require('../errors/AppError');
 const { ERROR_CODE } = require('#shared');
+// Dùng chung với client: issue zod -> key 'validation.*' (kể cả lỗi sai kiểu mà zod tự sinh
+// message tiếng Anh). shared/ là ESM, require() được nhờ require(esm) của Node.
+const { zodIssueKey } = require('../../../shared/validators/issueKey');
 
 /**
  * Validate req.body against a zod schema. Trên lỗi, throw ERR_VALIDATION với
@@ -9,7 +12,7 @@ const { ERROR_CODE } = require('#shared');
 function toValidationError(zodError) {
     const firstIssue = zodError.issues[0];
     const field = firstIssue?.path?.join('.') || '';
-    const reasonKey = firstIssue?.message || 'validation.default';
+    const reasonKey = firstIssue ? zodIssueKey(firstIssue) : 'validation.default';
     const fallback = field ? `${field}: ${reasonKey}` : reasonKey;
     return new AppError(400, ERROR_CODE.VALIDATION, fallback, { field, reasonKey });
 }

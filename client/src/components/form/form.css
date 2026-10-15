@@ -1,0 +1,283 @@
+/*
+ * Style của components/form.
+ *
+ * Nguyên tắc: khung chứa có sẵn (.modal-card, .profile-card trong app/App.css) đã định dạng
+ * label/input theo kiểu riêng — các rule ở đây CỐ Ý có độ ưu tiên thấp hơn
+ * (.modal-card input = 0,1,1 > .input = 0,1,0) để form cũ chuyển sang component mới vẫn trông y
+ * như trước. Ngoài các khung đó, style dưới đây áp dụng.
+ *
+ * Ngoại lệ: ô tích và khung chọn file KHÔNG được ăn style "label viết hoa / input rộng 100%"
+ * của .modal-card, nên dùng selector có độ ưu tiên cao hơn (thêm [class]) — xem từng chỗ.
+ */
+
+/* ---------- Bố cục ---------- */
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 14px;
+}
+
+.form-layout-grid .form-span-2 {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 560px) {
+  .form-layout-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* ---------- Trường ---------- */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.field-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.field-required {
+  color: var(--color-danger);
+  margin-left: 3px;
+}
+
+.field-hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.field-error {
+  font-size: 12px;
+  color: var(--color-danger);
+}
+
+/* ---------- Input / Textarea / Select ---------- */
+.input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+  border-color: var(--color-primary);
+}
+
+.input:disabled {
+  background: #f3f4f6;
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+/* Viền đỏ khi lỗi phải thắng cả .modal-card input -> thêm [aria-invalid]. */
+.input.is-invalid[aria-invalid] {
+  border-color: var(--color-danger);
+}
+.input.is-invalid[aria-invalid]:focus {
+  outline-color: var(--color-danger);
+}
+
+/* Trong thanh lọc (.search-bar) select/input chỉ rộng vừa nội dung, không kéo giãn cả hàng. */
+.search-bar .input {
+  width: auto;
+  padding: 8px 12px;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+
+/* ---------- Checkbox ---------- */
+/* label.checkbox-option[class] = (0,2,1) > .modal-card label (0,1,1): không bị viết hoa/xếp dọc. */
+label.checkbox-option[class] {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+label.checkbox-option[class]:hover {
+  background: #f9fafb;
+}
+
+label.checkbox-option.is-disabled[class] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.checkbox-option input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+  accent-color: var(--color-primary);
+}
+
+.checkbox-option-hint {
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.checkbox-group {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.checkbox-group.is-invalid {
+  border-color: var(--color-danger);
+}
+
+.checkbox-group-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+/* ---------- File ---------- */
+label.file-dropzone[class] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 18px 12px;
+  border: 1.5px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fafafa;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+label.file-dropzone[class]:hover,
+label.file-dropzone.is-dragover[class] {
+  border-color: var(--color-primary);
+  background: #eef2ff;
+  color: var(--color-primary);
+}
+
+label.file-dropzone[class]:focus-within {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.file-input.is-invalid label.file-dropzone[class] {
+  border-color: var(--color-danger);
+}
+
+.file-input.is-disabled label.file-dropzone[class] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.file-dropzone-title {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* Input file thật ẩn khỏi mắt nhưng vẫn focus được bằng bàn phím. */
+.file-dropzone input[type='file'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.file-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.file-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.file-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+/* li button (0,1,2) > .profile-card button (0,1,1): không bị đẩy margin-top/align-self. */
+.file-list li button {
+  align-self: center;
+  display: flex;
+  border: none;
+  background: none;
+  padding: 2px;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.file-list li button:hover:not(:disabled) {
+  color: var(--color-danger);
+}

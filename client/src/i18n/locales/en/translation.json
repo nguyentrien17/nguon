@@ -3,7 +3,37 @@
     "title": "Enterprise RBAC Portal"
   },
   "common": {
-    "close": "Close"
+    "close": "Close",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "search": "Search",
+    "dismiss": "Dismiss",
+    "noData": "No data",
+    "loading": "Loading…",
+    "pagination": "Pagination",
+    "previous": "Previous page",
+    "next": "Next page",
+    "totalItems": "Total: {{count}}",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "sessionExpired": "Your session has expired. Please sign in again.",
+    "unexpectedError": "Something went wrong. Please reload the page.",
+    "reload": "Reload",
+    "toggleMenu": "Toggle menu",
+    "notFound": "Page not found.",
+    "backToDashboard": "Back to dashboard"
+  },
+  "form": {
+    "selectPlaceholder": "-- Select --",
+    "chooseFile": "Choose a file",
+    "chooseFiles": "Choose files",
+    "dropHere": "or drag and drop here",
+    "acceptedTypes": "Accepted: {{accept}}",
+    "maxSize": "Max {{max}}",
+    "fileTooLarge": "\"{{name}}\" is larger than {{max}}.",
+    "fileTypeNotAllowed": "\"{{name}}\" is not an accepted file type.",
+    "removeFile": "Remove {{name}}"
   },
   "login": {
     "heroTitle": "Welcome Back!",
@@ -15,7 +45,9 @@
     "password": "Password",
     "submit": "Sign in",
     "loading": "Signing in...",
-    "forgotPassword": "Forgot password?"
+    "forgotPassword": "Forgot password?",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "forgotPassword": {
     "heroTitle": "Forgot your password?",
@@ -54,10 +86,22 @@
     "logout": "Logout"
   },
   "dashboard": {
-    "welcome": "Welcome back, {{name}}"
+    "welcome": "Welcome back, {{name}}",
+    "modules": "Modules",
+    "status": "Status",
+    "online": "Online"
   },
   "users": {
     "title": "User Management",
+    "empty": "No users found",
+    "created": "User created successfully",
+    "updated": "User updated successfully",
+    "lockedToast": "User locked",
+    "unlockedToast": "User unlocked",
+    "passwordKeepHint": "Leave blank to keep current password",
+    "noRoles": "No roles available",
+    "roleAssigned": "Assigned \"{{role}}\" to {{user}}",
+    "roleRemoved": "Removed \"{{role}}\" from {{user}}",
     "search": "Search by username, email or name",
     "create": "New User",
     "edit": "Edit",
@@ -121,7 +165,13 @@
       "name": "Name",
       "path": "Path / Element ID",
       "grant": "Grant"
-    }
+    },
+    "created": "Role created successfully",
+    "updated": "Role updated successfully",
+    "deleted": "Role deleted",
+    "empty": "No roles found",
+    "deleteTitle": "Delete role",
+    "deleteConfirm": "Delete role \"{{name}}\"? This will also remove its sub-roles and unassign it from all users."
   },
   "moduleActions": {
     "title": "Module & Action Management",
@@ -196,10 +246,13 @@
       "save": "Save"
     },
     "confirmDeleteModule": "Permanently delete this archived module? This cannot be undone — all its sub-modules, actions and granted permissions will be removed.",
-    "confirmDeleteAction": "Permanently delete this archived action? This cannot be undone — it will be removed from all roles that were granted it."
+    "confirmDeleteAction": "Permanently delete this archived action? This cannot be undone — it will be removed from all roles that were granted it.",
+    "saved": "Saved",
+    "deleted": "Deleted"
   },
   "auditLogs": {
     "title": "Audit Log",
+    "empty": "No audit logs found",
     "allActions": "All actions",
     "allStatuses": "All statuses",
     "columns": {
@@ -222,21 +275,6 @@
     "updated": "Profile updated successfully",
     "passwordChanged": "Password changed successfully",
     "passwordMismatch": "New password and confirmation do not match"
-  },
-  "errors": {
-    "ERR_INVALID_CREDENTIALS": "Invalid username or password",
-    "ERR_INVALID_CURRENT_PASSWORD": "Current password is incorrect",
-    "ERR_ACCOUNT_LOCKED": "Account is temporarily locked. Please try again later",
-    "ERR_ACCOUNT_DISABLED": "This account has been disabled",
-    "ERR_TOO_MANY_ATTEMPTS": "Too many login attempts. Please try again later",
-    "ERR_TOO_MANY_REQUESTS": "Too many requests. Please slow down",
-    "ERR_PERMISSION_DENIED": "You do not have permission to perform this action",
-    "ERR_PROTECTED_ROLE": "The Administrator role cannot be modified",
-    "ERR_NOT_FOUND": "The requested item was not found",
-    "ERR_VALIDATION": "Please check the entered information",
-    "ERR_DUPLICATE": "This record already exists",
-    "ERR_SERVER": "Something went wrong. Please try again",
-    "ERR_UNKNOWN": "Unknown error"
   },
   "validation": {
     "required": "{{field}} is required",

@@ -1,31 +1,29 @@
-const { z } = require('zod');
+import { z } from 'zod';
+import { atLeastOneField, email, optionalText, positiveId, requiredName } from './fields.js';
 
-const passwordSchema = z
+export const passwordSchema = z
     .string()
     .min(8, 'validation.tooShort')
     .regex(/[A-Za-z]/, 'validation.invalidFormat')
     .regex(/[0-9]/, 'validation.invalidFormat');
 
-const createUserSchema = z.object({
+export const createUserSchema = z.object({
     username: z
         .string()
         .trim()
         .min(3, 'validation.tooShort')
-        .max(100)
+        .max(100, 'validation.tooLong')
         .regex(/^[a-zA-Z0-9_.]+$/, 'validation.invalidFormat'),
-    email: z.string().trim().email('validation.invalidFormat'),
+    email,
     password: passwordSchema,
-    full_name: z.string().trim().min(1, 'validation.required').max(255),
-    role_ids: z.array(z.number().int().positive()).optional().default([]),
+    full_name: requiredName,
+    role_ids: z.array(positiveId).optional().default([]),
 });
 
-const updateUserSchema = z
-    .object({
-        email: z.string().trim().email('validation.invalidFormat').optional(),
-        full_name: z.string().trim().min(1).max(255).optional(),
-        avatar: z.string().trim().max(500).nullable().optional(),
+// Cập nhật: email / full_name lấy từ createUserSchema (cùng quy tắc), tất cả tuỳ chọn.
+export const updateUserSchema = atLeastOneField(
+    createUserSchema.pick({ email: true, full_name: true }).partial().extend({
+        avatar: optionalText(500),
         password: passwordSchema.optional(),
     })
-    .refine((data) => Object.keys(data).length > 0, { message: 'validation.noFieldsToUpdate' });
-
-module.exports = { passwordSchema, createUserSchema, updateUserSchema };
+);

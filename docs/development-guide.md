@@ -76,6 +76,7 @@ Client gọi API qua `VITE_API_URL`, mặc định
 |---|---|
 | `npm run dev` / `build` / `preview` | Vite |
 | `npm run lint` | eslint |
+| `npm test` / `npm run test:watch` | vitest + Testing Library (jsdom), không cần server — xem [testing.md](testing.md) mục 1c |
 | `npm run audit` | `npm audit --omit=dev` |
 
 **root/**: chỉ `npm run audit`.

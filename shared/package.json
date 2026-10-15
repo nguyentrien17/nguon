@@ -1,0 +1,6 @@
+{
+  "name": "shared",
+  "private": true,
+  "description": "Dùng chung client <-> server. ESM: client (Vite) import trực tiếp; server (CommonJS) require() được nhờ require(esm) của Node >= 20.19 / 22.12. Không có top-level await (require(esm) không hỗ trợ).",
+  "type": "module"
+}

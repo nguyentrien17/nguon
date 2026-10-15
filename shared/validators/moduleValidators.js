@@ -1,41 +1,22 @@
-const { z } = require('zod');
+import { z } from 'zod';
+import { optionalId, optionalText, recordStatus, requiredName, upperCode } from './fields.js';
 
-const createModuleSchema = z.object({
-    module_code: z
-        .string()
-        .trim()
-        .min(2, 'validation.tooShort')
-        .max(100)
-        .regex(/^[A-Z0-9_]+$/, 'validation.invalidFormat'),
-    module_name: z.string().trim().min(1, 'validation.required').max(255),
-    module_href: z.string().trim().max(255).optional().nullable(),
-    module_element_id: z.string().trim().max(100).optional().nullable(),
-    module_parent_id: z.number().int().positive().optional().nullable(),
-    module_type: z.number().int().min(1).max(2).optional(),
-    module_icon: z.string().trim().max(50).optional().nullable(),
+export const createModuleSchema = z.object({
+    module_code: upperCode,
+    module_name: requiredName,
+    module_href: optionalText(255),
+    module_element_id: optionalText(100),
+    module_parent_id: optionalId,
+    module_type: z.number().int().min(1).max(2).optional(), // MODULE_TYPE: 1 menu, 2 màn hình
+    module_icon: optionalText(50),
     module_index: z.number().int().optional(),
-    description: z.string().trim().max(500).optional().nullable(),
+    description: optionalText(500),
 });
 
-const updateModuleSchema = z.object({
-    module_name: z.string().trim().min(1, 'validation.required').max(255),
-    module_href: z.string().trim().max(255).optional().nullable(),
-    module_element_id: z.string().trim().max(100).optional().nullable(),
-    module_type: z.number().int().min(1).max(2).optional(),
-    module_icon: z.string().trim().max(50).optional().nullable(),
-    module_index: z.number().int().optional(),
-    status: z.number().int().min(0).max(2).optional(),
-    description: z.string().trim().max(500).optional().nullable(),
-});
+// Cập nhật: không đổi được mã và module cha; được đổi trạng thái.
+export const updateModuleSchema = createModuleSchema
+    .omit({ module_code: true, module_parent_id: true })
+    .extend({ status: recordStatus.optional() });
 
-const cloneModuleSchema = z.object({
-    module_code: z
-        .string()
-        .trim()
-        .min(2, 'validation.tooShort')
-        .max(100)
-        .regex(/^[A-Z0-9_]+$/, 'validation.invalidFormat'),
-    module_name: z.string().trim().min(1, 'validation.required').max(255),
-});
-
-module.exports = { createModuleSchema, updateModuleSchema, cloneModuleSchema };
+// Nhân bản: chỉ cần mã + tên mới, cùng quy tắc với tạo mới.
+export const cloneModuleSchema = createModuleSchema.pick({ module_code: true, module_name: true });

@@ -28,6 +28,7 @@ Trước khi sửa code, đọc:
 - [docs/database-conventions.md](docs/database-conventions.md) — schema, migration, vấn đề đã biết
 - [docs/security.md](docs/security.md) — cơ chế bảo vệ đang có và giới hạn của chúng
 - [docs/testing.md](docs/testing.md) — test nào có, test nào **chưa** có
+- [docs/ui-components.md](docs/ui-components.md) — component giao diện dùng chung (thông báo, nút, danh sách, modal, form)
 
 ## Yêu cầu
 
@@ -96,5 +97,9 @@ Build production: đặt `VITE_API_URL` (xem `client/.env.example`) **trước**
 - Quên mật khẩu (`/forgot-password`): chưa cấu hình SMTP/email provider thật — link reset hiện chỉ được log ra console server (`server/core/mailer.js`). Cần thay bằng provider thật (SendGrid/SES/SMTP...) trước khi dùng production.
 - `npm run audit` (root/client/server) chạy `npm audit --omit=dev`.
 - `LOG_LEVEL` (`error`/`warn`/`info`/`debug`) điều chỉnh độ chi tiết của application log; mặc định `debug` ở development, `info` ở production.
-- Kiểm tra tự động (đều ở `server/`): `npm run lint`, `npm test` (unit, không cần DB), `npm run smoke` (không cần DB), `npm run test:contract` và `npm run test:security` (cần server đang chạy + MySQL). Chưa có test UI, chưa có CI, chưa có Dockerfile — xem [docs/testing.md](docs/testing.md).
+- Kiểm tra tự động:
+  - `server/`: `npm run lint`, `npm test` (unit, không cần DB), `npm run smoke` (không cần DB), `npm run test:contract` và `npm run test:security` (cần server đang chạy + MySQL).
+  - `client/`: `npm run lint`, `npm test` (vitest + Testing Library, không cần server), `npm run build`.
+  - Chưa có CI, chưa có Dockerfile — xem [docs/testing.md](docs/testing.md).
+- `shared/` là **ESM** (`shared/package.json` có `"type": "module"`): client import trực tiếp, server `require()` được nhờ `require(esm)` của Node ≥ 20.19 / 22.12 — lý do yêu cầu phiên bản Node ở trên. Không dùng top-level `await` trong `shared/`.
 - Server dùng `overrides` trong `package.json` để ép `uuid` (phụ thuộc gián tiếp của `exceljs`) lên `11.1.1` — bản `8.x` mà `exceljs` kéo về có lỗ hổng. Khi nâng `exceljs`, kiểm tra lại xem còn cần override không.

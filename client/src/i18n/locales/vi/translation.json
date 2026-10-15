@@ -3,7 +3,37 @@
     "title": "Cổng Quản Trị RBAC"
   },
   "common": {
-    "close": "Đóng"
+    "close": "Đóng",
+    "cancel": "Huỷ",
+    "confirm": "Xác nhận",
+    "save": "Lưu",
+    "search": "Tìm kiếm",
+    "dismiss": "Đóng thông báo",
+    "noData": "Không có dữ liệu",
+    "loading": "Đang tải…",
+    "pagination": "Phân trang",
+    "previous": "Trang trước",
+    "next": "Trang sau",
+    "totalItems": "Tổng: {{count}}",
+    "expand": "Mở rộng",
+    "collapse": "Thu gọn",
+    "sessionExpired": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+    "unexpectedError": "Đã có lỗi xảy ra. Vui lòng tải lại trang.",
+    "reload": "Tải lại",
+    "toggleMenu": "Mở / đóng menu",
+    "notFound": "Không tìm thấy trang.",
+    "backToDashboard": "Về trang tổng quan"
+  },
+  "form": {
+    "selectPlaceholder": "-- Chọn --",
+    "chooseFile": "Chọn file",
+    "chooseFiles": "Chọn các file",
+    "dropHere": "hoặc kéo thả vào đây",
+    "acceptedTypes": "Định dạng: {{accept}}",
+    "maxSize": "Tối đa {{max}}",
+    "fileTooLarge": "\"{{name}}\" vượt quá {{max}}.",
+    "fileTypeNotAllowed": "\"{{name}}\" không đúng định dạng cho phép.",
+    "removeFile": "Bỏ {{name}}"
   },
   "login": {
     "heroTitle": "Chào mừng trở lại!",
@@ -15,7 +45,9 @@
     "password": "Mật khẩu",
     "submit": "Đăng nhập",
     "loading": "Đang đăng nhập...",
-    "forgotPassword": "Quên mật khẩu?"
+    "forgotPassword": "Quên mật khẩu?",
+    "showPassword": "Hiện mật khẩu",
+    "hidePassword": "Ẩn mật khẩu"
   },
   "forgotPassword": {
     "heroTitle": "Quên mật khẩu?",
@@ -54,10 +86,22 @@
     "logout": "Đăng xuất"
   },
   "dashboard": {
-    "welcome": "Chào mừng trở lại, {{name}}"
+    "welcome": "Chào mừng trở lại, {{name}}",
+    "modules": "Module",
+    "status": "Trạng thái",
+    "online": "Hoạt động"
   },
   "users": {
     "title": "Quản lý người dùng",
+    "empty": "Không tìm thấy người dùng nào",
+    "created": "Đã tạo người dùng",
+    "updated": "Đã cập nhật người dùng",
+    "lockedToast": "Đã khoá người dùng",
+    "unlockedToast": "Đã mở khoá người dùng",
+    "passwordKeepHint": "Để trống nếu giữ nguyên mật khẩu hiện tại",
+    "noRoles": "Chưa có vai trò nào",
+    "roleAssigned": "Đã gán \"{{role}}\" cho {{user}}",
+    "roleRemoved": "Đã gỡ \"{{role}}\" khỏi {{user}}",
     "search": "Tìm theo tên đăng nhập, email hoặc họ tên",
     "create": "Thêm người dùng",
     "edit": "Sửa",
@@ -121,7 +165,13 @@
       "name": "Tên quyền/Action",
       "path": "Đường dẫn/ElementId",
       "grant": "Quyền"
-    }
+    },
+    "created": "Đã tạo vai trò",
+    "updated": "Đã cập nhật vai trò",
+    "deleted": "Đã xoá vai trò",
+    "empty": "Không có vai trò nào",
+    "deleteTitle": "Xoá vai trò",
+    "deleteConfirm": "Xoá vai trò \"{{name}}\"? Các vai trò con cũng bị xoá và vai trò sẽ bị gỡ khỏi mọi người dùng."
   },
   "moduleActions": {
     "title": "Quản lý module và action",
@@ -196,10 +246,13 @@
       "save": "Lưu"
     },
     "confirmDeleteModule": "Xóa vĩnh viễn module đã lưu trữ này? Không thể hoàn tác — toàn bộ module con, action và quyền đã gán liên quan sẽ bị xóa theo.",
-    "confirmDeleteAction": "Xóa vĩnh viễn action đã lưu trữ này? Không thể hoàn tác — nó sẽ bị gỡ khỏi mọi vai trò đã được gán quyền này."
+    "confirmDeleteAction": "Xóa vĩnh viễn action đã lưu trữ này? Không thể hoàn tác — nó sẽ bị gỡ khỏi mọi vai trò đã được gán quyền này.",
+    "saved": "Đã lưu",
+    "deleted": "Đã xoá"
   },
   "auditLogs": {
     "title": "Nhật ký hệ thống",
+    "empty": "Không có nhật ký nào",
     "allActions": "Tất cả hành động",
     "allStatuses": "Tất cả trạng thái",
     "columns": {
@@ -222,21 +275,6 @@
     "updated": "Cập nhật hồ sơ thành công",
     "passwordChanged": "Đổi mật khẩu thành công",
     "passwordMismatch": "Mật khẩu mới và xác nhận không khớp"
-  },
-  "errors": {
-    "ERR_INVALID_CREDENTIALS": "Tên đăng nhập hoặc mật khẩu không đúng",
-    "ERR_INVALID_CURRENT_PASSWORD": "Mật khẩu hiện tại không đúng",
-    "ERR_ACCOUNT_LOCKED": "Tài khoản đang bị khóa tạm thời. Vui lòng thử lại sau",
-    "ERR_ACCOUNT_DISABLED": "Tài khoản này đã bị vô hiệu hóa",
-    "ERR_TOO_MANY_ATTEMPTS": "Đăng nhập sai quá nhiều lần. Vui lòng thử lại sau",
-    "ERR_TOO_MANY_REQUESTS": "Bạn thao tác quá nhanh, vui lòng thử lại sau",
-    "ERR_PERMISSION_DENIED": "Bạn không có quyền thực hiện thao tác này",
-    "ERR_PROTECTED_ROLE": "Vai trò Administrator không thể bị chỉnh sửa",
-    "ERR_NOT_FOUND": "Không tìm thấy dữ liệu",
-    "ERR_VALIDATION": "Vui lòng kiểm tra lại thông tin đã nhập",
-    "ERR_DUPLICATE": "Dữ liệu này đã tồn tại",
-    "ERR_SERVER": "Đã có lỗi xảy ra. Vui lòng thử lại",
-    "ERR_UNKNOWN": "Lỗi không xác định"
   },
   "validation": {
     "required": "{{field}} là bắt buộc",

@@ -41,6 +41,11 @@ request kế tiếp thay vì phải chờ access token hết hạn.
 Token *vẫn* chứa danh sách quyền, nhưng **chỉ để client dựng UI**. Đừng dùng nó để quyết định
 ở backend.
 
+Danh sách quyền ở client có thể cũ hơn DB (admin vừa đổi role). `AuthContext` đồng bộ lại (gọi
+`/auth/refresh`) khi một request bị 403 `ERR_PERMISSION_DENIED`, và khi người dùng quay lại tab
+sau hơn 5 phút; tối đa 1 lần / 30 giây. Đây chỉ là để nút/menu hiển thị đúng — việc chặn thật
+vẫn do backend làm ở mọi request.
+
 `PROTECTED_ROLE_CODE` (trong `shared/constants.json`) là role được bỏ qua mọi kiểm tra quyền
 chi tiết. Role này không xoá/sửa được qua API.
 

@@ -3,7 +3,37 @@
     "title": "企业 RBAC 管理门户"
   },
   "common": {
-    "close": "关闭"
+    "close": "关闭",
+    "cancel": "取消",
+    "confirm": "确认",
+    "save": "保存",
+    "search": "搜索",
+    "dismiss": "关闭通知",
+    "noData": "暂无数据",
+    "loading": "加载中…",
+    "pagination": "分页",
+    "previous": "上一页",
+    "next": "下一页",
+    "totalItems": "共 {{count}} 条",
+    "expand": "展开",
+    "collapse": "收起",
+    "sessionExpired": "登录会话已过期，请重新登录。",
+    "unexpectedError": "出现错误，请刷新页面。",
+    "reload": "刷新",
+    "toggleMenu": "展开/收起菜单",
+    "notFound": "页面不存在。",
+    "backToDashboard": "返回仪表盘"
+  },
+  "form": {
+    "selectPlaceholder": "-- 请选择 --",
+    "chooseFile": "选择文件",
+    "chooseFiles": "选择多个文件",
+    "dropHere": "或拖放到此处",
+    "acceptedTypes": "格式：{{accept}}",
+    "maxSize": "最大 {{max}}",
+    "fileTooLarge": "“{{name}}”超过 {{max}}。",
+    "fileTypeNotAllowed": "“{{name}}”的文件格式不被允许。",
+    "removeFile": "移除 {{name}}"
   },
   "login": {
     "heroTitle": "欢迎回来！",
@@ -15,7 +45,9 @@
     "password": "密码",
     "submit": "登录",
     "loading": "正在登录...",
-    "forgotPassword": "忘记密码？"
+    "forgotPassword": "忘记密码？",
+    "showPassword": "显示密码",
+    "hidePassword": "隐藏密码"
   },
   "forgotPassword": {
     "heroTitle": "忘记密码了吗？",
@@ -54,10 +86,22 @@
     "logout": "退出登录"
   },
   "dashboard": {
-    "welcome": "欢迎回来，{{name}}"
+    "welcome": "欢迎回来，{{name}}",
+    "modules": "模块",
+    "status": "状态",
+    "online": "在线"
   },
   "users": {
     "title": "用户管理",
+    "empty": "未找到用户",
+    "created": "用户已创建",
+    "updated": "用户已更新",
+    "lockedToast": "用户已锁定",
+    "unlockedToast": "用户已解锁",
+    "passwordKeepHint": "留空则保持当前密码",
+    "noRoles": "暂无角色",
+    "roleAssigned": "已将“{{role}}”分配给 {{user}}",
+    "roleRemoved": "已从 {{user}} 移除“{{role}}”",
     "search": "按用户名、邮箱或姓名搜索",
     "create": "新建用户",
     "edit": "编辑",
@@ -121,7 +165,13 @@
       "name": "权限/操作名称",
       "path": "路径/元素 ID",
       "grant": "授权"
-    }
+    },
+    "created": "角色已创建",
+    "updated": "角色已更新",
+    "deleted": "角色已删除",
+    "empty": "暂无角色",
+    "deleteTitle": "删除角色",
+    "deleteConfirm": "删除角色“{{name}}”？其子角色也会被删除，并从所有用户中移除该角色。"
   },
   "moduleActions": {
     "title": "模块与操作管理",
@@ -196,10 +246,13 @@
       "save": "保存"
     },
     "confirmDeleteModule": "永久删除此已归档模块？此操作不可撤销——其所有子模块、操作及相关已授予的权限都将被删除。",
-    "confirmDeleteAction": "永久删除此已归档操作？此操作不可撤销——所有已被授予该操作的角色都会移除此权限。"
+    "confirmDeleteAction": "永久删除此已归档操作？此操作不可撤销——所有已被授予该操作的角色都会移除此权限。",
+    "saved": "已保存",
+    "deleted": "已删除"
   },
   "auditLogs": {
     "title": "审计日志",
+    "empty": "暂无审计日志",
     "allActions": "全部操作",
     "allStatuses": "全部状态",
     "columns": {
@@ -222,21 +275,6 @@
     "updated": "资料更新成功",
     "passwordChanged": "密码修改成功",
     "passwordMismatch": "新密码与确认密码不一致"
-  },
-  "errors": {
-    "ERR_INVALID_CREDENTIALS": "用户名或密码不正确",
-    "ERR_INVALID_CURRENT_PASSWORD": "当前密码不正确",
-    "ERR_ACCOUNT_LOCKED": "账户已被临时锁定，请稍后重试",
-    "ERR_ACCOUNT_DISABLED": "该账户已被禁用",
-    "ERR_TOO_MANY_ATTEMPTS": "登录尝试次数过多，请稍后重试",
-    "ERR_TOO_MANY_REQUESTS": "请求过于频繁，请稍后重试",
-    "ERR_PERMISSION_DENIED": "您没有权限执行此操作",
-    "ERR_PROTECTED_ROLE": "管理员角色不可修改",
-    "ERR_NOT_FOUND": "未找到相关数据",
-    "ERR_VALIDATION": "请检查输入的信息",
-    "ERR_DUPLICATE": "该记录已存在",
-    "ERR_SERVER": "出现错误，请重试",
-    "ERR_UNKNOWN": "未知错误"
   },
   "validation": {
     "required": "{{field}} 为必填项",

@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Users, ShieldCheck, ScrollText, Boxes, Circle, ChevronRight, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/core/auth/AuthContext';
-import axiosClient from '@/core/api/axiosClient';
 import { MODULE_CODE, MODULE_TYPE } from '@shared/constants.json';
 import { MODULE_ICON_MAP } from '@/constants/moduleIcons';
 
@@ -17,28 +16,21 @@ const ICONS = {
 
 export default function Sidebar({ open, onNavigate }) {
     const { t } = useTranslation();
-    const { canAccessModule } = useAuth();
-    const [modules, setModules] = useState([]);
-    const [expanded, setExpanded] = useState(new Set());
-
-    useEffect(() => {
-        axiosClient
-            .get('/modules')
-            .then(({ data }) => {
-                setModules(data.data);
-                setExpanded(new Set(data.data.map((m) => m.id)));
-            })
-            .catch(() => setModules([]));
-    }, []);
+    // modules do AuthContext nạp sẵn mỗi khi có phiên mới — trước đây Sidebar tự gọi /modules
+    // lần thứ hai với cùng dữ liệu.
+    const { canOpenModule, modules } = useAuth();
+    // Lưu nhóm đang THU GỌN (mặc định trống = mở hết) để không phải khởi tạo lại khi modules về.
+    const [collapsed, setCollapsed] = useState(new Set());
 
     const visibleModules = modules.filter(
-        (m) => m.module_type === MODULE_TYPE.MENU && canAccessModule(m.module_code)
+        // Cùng quy tắc với ProtectedRoute — menu không hiện mục mà bấm vào lại bị đẩy về Dashboard.
+        (m) => m.module_type === MODULE_TYPE.MENU && canOpenModule(m.module_code)
     );
     const rootModules = visibleModules.filter((m) => !m.module_parent_id);
     const childrenOf = (parentId) => visibleModules.filter((m) => m.module_parent_id === parentId);
 
     const toggleExpanded = (id) => {
-        setExpanded((prev) => {
+        setCollapsed((prev) => {
             const next = new Set(prev);
             if (next.has(id)) next.delete(id);
             else next.add(id);
@@ -49,7 +41,7 @@ export default function Sidebar({ open, onNavigate }) {
     const renderModule = (m, depth) => {
         const children = childrenOf(m.id);
         const hasChildren = children.length > 0;
-        const isOpen = expanded.has(m.id);
+        const isOpen = !collapsed.has(m.id);
         const Icon = MODULE_ICON_MAP[m.module_icon] || ICONS[m.module_code] || Circle;
 
         return (
@@ -71,7 +63,8 @@ export default function Sidebar({ open, onNavigate }) {
                             type="button"
                             className="sidebar-toggle"
                             onClick={() => toggleExpanded(m.id)}
-                            aria-label={isOpen ? 'Collapse' : 'Expand'}
+                            aria-label={isOpen ? t('common.collapse') : t('common.expand')}
+                            aria-expanded={isOpen}
                         >
                             {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                         </button>

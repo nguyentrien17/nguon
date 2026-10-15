@@ -9,6 +9,7 @@ const SIGNED_METHODS = ['post', 'put', 'delete', 'patch'];
 let accessToken = null;
 let signingKey = null;
 let onUnauthorized = null;
+let onPermissionDenied = null;
 
 export function setAccessToken(token) {
     accessToken = token;
@@ -20,6 +21,12 @@ export function setSigningKey(key) {
 
 export function setOnUnauthorized(handler) {
     onUnauthorized = handler;
+}
+
+// Gọi khi server trả 403 ERR_PERMISSION_DENIED: danh sách quyền client đang giữ (lấy lúc
+// login/refresh) đã cũ hơn quyền thật trong DB — AuthContext dùng để đồng bộ lại.
+export function setOnPermissionDenied(handler) {
+    onPermissionDenied = handler;
 }
 
 const axiosClient = axios.create({
@@ -68,6 +75,12 @@ axiosClient.interceptors.response.use(
         const originalRequest = error.config;
         const status = error.response?.status;
         const errorCode = error.response?.data?.errorCode;
+
+        if (!originalRequest) return Promise.reject(error); // request bị huỷ / lỗi cấu hình
+
+        if (status === 403 && errorCode === ERROR_CODE.PERMISSION_DENIED && onPermissionDenied) {
+            onPermissionDenied();
+        }
 
         const isAuthEndpoint = originalRequest.url.includes('/auth/login') || originalRequest.url.includes('/auth/refresh');
 

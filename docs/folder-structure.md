@@ -9,7 +9,9 @@ xem mục "Việc còn tồn đọng".
 .
 ├── client/            React + Vite SPA
 ├── server/            Express API
-├── shared/            dùng chung client ↔ server (constants, zod, bảng dịch lỗi)
+├── shared/            dùng chung client ↔ server (ESM): constants.json, errorMessages.json,
+│                      validators/ (fields.js = quy tắc trường dùng chung, issueKey.js = issue
+│                      zod -> key dịch, *Validators.js = schema theo nghiệp vụ)
 ├── docs/              tài liệu kiến trúc (thư mục này)
 ├── tailieu/           tài liệu gốc của dự án (SRS, kế hoạch refactor)
 └── package.json       chỉ cung cấp node_modules (zod) cho shared/
@@ -131,6 +133,7 @@ client/src/
 │   ├── App.css
 │   ├── NotFound.jsx
 │   ├── router/AppRoutes.jsx  CHỈ chứa bảng route
+│   ├── router/lazyWithRetry.js  lazy() tự tải lại trang 1 lần khi chunk cũ mất sau deploy
 │   ├── providers/ToastContext.jsx
 │   └── layout/               Layout.jsx, Sidebar.jsx
 │
@@ -139,20 +142,42 @@ client/src/
 │   │   ├── axiosClient.js    axios instance + interceptor refresh token + ký request
 │   │   └── requestSigning.js HMAC phía client (phải khớp core/security/verifySignature.js)
 │   ├── auth/AuthContext.jsx  session, login/logout, can(), canAccessModule()
-│   ├── permissions/          ProtectedRoute.jsx, ActionGuard.jsx
-│   └── errors/               errorMessage.js, zodErrorMessage.js, ErrorBoundary.jsx
+│   ├── permissions/          ProtectedRoute.jsx, ActionGuard.jsx, moduleAccess.js (quy tắc
+│   │                         "mở được module" dùng chung cho Sidebar + ProtectedRoute)
+│   └── errors/               errorMessage.js (dịch mã lỗi từ shared/errorMessages.json),
+│                             zodErrorMessage.js, ErrorBoundary.jsx (gốc + quanh từng trang)
 │
-├── components/ui/            Spinner, EmptyState, ConfirmDialog, LanguageSwitcher
+├── test/                     hạ tầng vitest: setup.js, render.jsx, i18nLabel.js
+│                             (file *.test.jsx đặt CẠNH file được test)
+│
+├── components/ui/            bộ component dùng chung — xem docs/ui-components.md
+│                             Button, IconButton, Badge, Alert, Modal, ConfirmDialog, Tabs,
+│                             DataTable, Pagination (+ paginationUtils.js), SearchBar,
+│                             EmptyState, Spinner, LanguageSwitcher; index.js (import gộp);
+│                             ui.css (style MỚI — style cũ vẫn ở app/App.css)
+├── components/form/          Form (dựng form từ danh sách trường), FormModal (Modal + Form),
+│                             Field, Input, Textarea, Select, Checkbox, CheckboxGroup,
+│                             TriStateCheckbox, FileInput, Label, FormField;
+│                             formUtils.js (validateForm và hàm thuần); form.css; index.js
+├── hooks/                    usePagedList (danh sách phân trang), useForm (state + validate
+│                             form), useEscapeKey
 │
 ├── features/                 ◄── NGHIỆP VỤ (trước đây là pages/)
-│   ├── auth/                 Login, ForgotPassword, ResetPassword
-│   ├── users/                Users, UserRolesModal
-│   ├── permissions/          Permissions, permissionPresets.js
-│   ├── module-actions/       ModuleActions
-│   ├── audit-logs/           AuditLogs
-│   ├── dashboard/            Dashboard, StatCard
-│   └── profile/              Profile
+│   ├── users/                Users (trang), UserFormModal, UserRolesModal, userApi.js
+│   │                         — khuôn chia file mẫu, xem coding-conventions.md mục 4
+│   ├── permissions/          Permissions (trang cây role), RoleFormModal (2 tab),
+│   │                         PermissionTreeEditor, RoleGrantsTable, permissionTree.js (logic
+│   │                         thuần), permissionPresets.js, permissionApi.js
+│   ├── module-actions/       ModuleActions (trang), ModuleTreeTable, ModuleFormModal,
+│   │                         ActionFormModal, CloneModuleModal, InsightsPanel, IconPicker,
+│   │                         RecordStatusBadge, moduleFilter.js, moduleActionApi.js
+│   ├── auth/                 Login, ForgotPassword, ResetPassword, AuthLayout, authApi.js
+│   ├── audit-logs/           AuditLogs, auditLogApi.js
+│   ├── dashboard/            Dashboard, StatCard, dashboardApi.js
+│   └── profile/              Profile, profileApi.js
 │
+├── lib/                      logic thuần dùng chung nhiều feature: moduleTree.js (cây
+│                             module/action — permissions + module-actions), downloadFile.js
 ├── constants/moduleIcons.js  dùng bởi app/layout/Sidebar VÀ features/module-actions,
 │                             nên để ở cấp dùng chung chứ không nhét vào một feature
 ├── i18n/                     index.js + locales/{vi,en,zh}/translation.json
@@ -187,8 +212,9 @@ Xếp theo thứ tự nên làm:
 4. **Gom `features/rbac/`** (backend) — đưa `permissions/`, `modules/`, `actions/` vào một
    thư mục. Đã hoãn có chủ ý: nó sửa `#features/permissions/*` ở 8 file mà không giúp gì cho
    ranh giới Core/Feature, vốn là mục tiêu của đợt đầu.
-5. **`shared/` là CommonJS, client là ESM** — hiện chạy được nhờ Vite interop, sẽ vỡ nếu
-   root `package.json` thêm `"type": "module"` hoặc khi dùng `shared/` trong test runner ESM.
+5. ~~**`shared/` là CommonJS, client là ESM**~~ — đã xong: `shared/` chuyển sang ESM
+   (`shared/package.json` `"type": "module"`); server `require()` được nhờ `require(esm)` của
+   Node ≥ 20.19 / 22.12. Nhờ vậy vitest nạp được mọi trang/form của client.
 6. ~~**Các tài liệu còn thiếu**~~ — đã có đủ 9 file trong `docs/` theo mục 5 của kế hoạch.
 7. **CI, Dockerfile** — chưa có (ESLint server và unit test đã có); xem [testing.md](testing.md) mục 6.
 8. **`.gitattributes`** — repo chưa chuẩn hoá line ending (git cảnh báo LF→CRLF trên hầu hết
